@@ -23,7 +23,6 @@ public class ProviderAccount extends UserData {
 
     public void WriteIntoDatabase (DatabaseReference mDatabase) {
         super.WriteIntoDatabase(mDatabase);
-        mDatabase.child("users").child(ID).child("Account").setValue("PROVIDER");
         mDatabase.child("users").child(ID).child("Email").setValue(Email);
     }
 
