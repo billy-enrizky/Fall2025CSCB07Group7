@@ -24,6 +24,47 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        int Type = 0;
+        if(UserManager.mAuth.getCurrentUser() == null){
+            Intent intent = new Intent(this, SignInActivity.class);
+            startActivity(intent);
+        }
+        if(UserManager.currentUser.account == accountType.CHILD){
+            Type = 1;
+        }else if(UserManager.currentUser.account == accountType.PARENT){
+            Type = 2;
+        }else{
+            Type = 3;
+        }
+        // adjust type of currentUser to corresponding role.
+        if(Type == 1){
+            UserManager.currentUser = new Child();
+            UserManager.currentUser.ReadFromDatabase(UserManager.mDatabase, UserManager.mAuth.getCurrentUser(), new CallBack(){
+                @Override
+                public void onComplete(){
+                    Intent intent = new Intent(MainActivity.this, ChildrenActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }else if(Type == 2){
+            UserManager.currentUser = new Parents();
+            UserManager.currentUser.ReadFromDatabase(UserManager.mDatabase, UserManager.mAuth.getCurrentUser(), new CallBack(){
+                @Override
+                public void onComplete(){
+                    Intent intent = new Intent(MainActivity.this, ParentsActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }else{
+            UserManager.currentUser = new Providers();
+            UserManager.currentUser.ReadFromDatabase(UserManager.mDatabase, UserManager.mAuth.getCurrentUser(), new CallBack(){
+                @Override
+                public void onComplete(){
+                    Intent intent = new Intent(MainActivity.this, ProvidersActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }
     }
 
     public void Onclick(android.view.View view) {

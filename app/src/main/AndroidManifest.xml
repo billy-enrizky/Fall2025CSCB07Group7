@@ -12,6 +12,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
         <activity
+            android:name=".ProvidersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ParentsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ChildrenActivity"
+            android:exported="false" />
+        <activity
             android:name=".OnBoardingActivity"
             android:exported="false" />
         <activity
