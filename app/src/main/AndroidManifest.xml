@@ -13,8 +13,9 @@
     <activity android:name=".SignUpActivity" android:exported="false" />
     <activity android:name=".MainActivity" android:exported="false" />
 
-    <!--  ADD THIS LINE -->
     <activity android:name=".ChildHomeActivity" android:exported="false" />
+    <activity android:name=".InhalerTechniqueActivity" android:exported="false"/>
+
 
     <activity android:name=".SignInActivity" android:exported="true">
         <intent-filter>

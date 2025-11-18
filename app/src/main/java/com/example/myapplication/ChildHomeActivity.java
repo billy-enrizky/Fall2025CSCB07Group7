@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,13 +14,20 @@ public class ChildHomeActivity extends AppCompatActivity {
 
         Button logSymptoms = findViewById(R.id.btnLogSymptoms);
         Button logMedicine = findViewById(R.id.btnLogMedicine);
+        Button inhalerBtn = findViewById(R.id.btnInhalerHelper);
 
         logSymptoms.setOnClickListener(v -> {
-            // TODO: Navigate to symptom logging
+            // TODO: navigate to symptom logging screen
         });
 
         logMedicine.setOnClickListener(v -> {
-            // TODO: Navigate to medicine logging
+            // TODO: navigate to medicine logging screen
+        });
+
+        // ⭐ Navigate to inhaler technique screen
+        inhalerBtn.setOnClickListener(v -> {
+            Intent intent = new Intent(ChildHomeActivity.this, InhalerTechniqueActivity.class);
+            startActivity(intent);
         });
     }
 }
