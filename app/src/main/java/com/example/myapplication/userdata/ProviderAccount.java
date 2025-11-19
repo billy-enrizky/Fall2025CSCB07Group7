@@ -12,6 +12,10 @@ import com.google.firebase.database.DataSnapshot;
 
 public class ProviderAccount extends UserData {
     String Email;
+    public ProviderAccount () {
+        super();
+        this.Email = "";
+    }
     public ProviderAccount (String ID, String Email) {
         super(ID);
         this.Email = Email;
@@ -44,7 +48,7 @@ public class ProviderAccount extends UserData {
                     ProviderAccount Data = Snapshot.getValue(ProviderAccount.class);
                     ProviderAccount.this.ID = Data.ID;
                     ProviderAccount.this.Account = Data.Account;
-                    ProviderAccount.this.firstTime = Data.firstTime;
+                    ProviderAccount.this.FirstTime = Data.FirstTime;
                     ProviderAccount.this.Email = Data.Email;
                     if(callback != null){
                         callback.onComplete();

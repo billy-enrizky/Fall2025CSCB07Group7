@@ -5,8 +5,13 @@ import com.example.myapplication.UserManager;
 
 public class ChildAccount extends UserData {
     String Parent_id;
+    public ChildAccount() {
+        super();
+        Parent_id = "";
+    }
     public ChildAccount(String ID) {
         super(ID);
+        Parent_id = "";
     }
     @Override
     public void WriteIntoDatabase(CallBack callback) {

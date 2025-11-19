@@ -12,6 +12,11 @@ import com.google.firebase.database.DataSnapshot;
 
 public class IndependentChildAccount extends ChildAccount {
     String Email;
+    public IndependentChildAccount () {
+        super();
+        this.Email = "";
+
+    }
     public IndependentChildAccount (String ID, String Email) {
         super(ID);
         this.Email = Email;
@@ -46,7 +51,7 @@ public class IndependentChildAccount extends ChildAccount {
                     IndependentChildAccount Data = Snapshot.getValue(IndependentChildAccount.class);
                     IndependentChildAccount.this.ID = Data.ID;
                     IndependentChildAccount.this.Account = Data.Account;
-                    IndependentChildAccount.this.firstTime = Data.firstTime;
+                    IndependentChildAccount.this.FirstTime = Data.FirstTime;
                     IndependentChildAccount.this.Email = Data.Email;
                     IndependentChildAccount.this.Parent_id = Data.Parent_id;
                     if(callback != null){

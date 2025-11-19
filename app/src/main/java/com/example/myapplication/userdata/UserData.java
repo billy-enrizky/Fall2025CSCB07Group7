@@ -17,13 +17,16 @@ enum accountType {PARENT, DEP_CHILD, INDEP_CHILD, PROVIDER}
 public class UserData {
     String ID;
     accountType Account;
-    Boolean firstTime;
+    Boolean FirstTime;
 
     public UserData(){
+        ID = "";
+        Account = accountType.DEP_CHILD;
+        FirstTime = true;
     }
     public UserData(String ID) {
         this.ID = ID;
-        this.firstTime = true;
+        this.FirstTime = true;
     }
 
     public String getID() {
@@ -33,10 +36,10 @@ public class UserData {
         this.ID = ID;
     }
     public boolean getFirstTime() {
-        return this.firstTime;
+        return this.FirstTime;
     }
-    public void setFirstTime (boolean firstTime) {
-        this.firstTime = firstTime;
+    public void setFirstTime (boolean FirstTime) {
+        this.FirstTime = FirstTime;
     }
 
     public void WriteIntoDatabase(CallBack callback) {
@@ -58,7 +61,7 @@ public class UserData {
                     UserData Data = Snapshot.getValue(UserData.class);
                     UserData.this.ID = Data.ID;
                     UserData.this.Account = Data.Account;
-                    UserData.this.firstTime = Data.firstTime;
+                    UserData.this.FirstTime = Data.FirstTime;
                     if(callback != null){
                         callback.onComplete();
                     }
@@ -70,6 +73,6 @@ public class UserData {
     public void changeFirstTime(String UserID, Boolean ft){
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         mDatabase.child("users").child(UserID).child("FirstTime").setValue(ft);
-        firstTime = ft;
+        FirstTime = ft;
     }
 }

@@ -15,6 +15,11 @@ import java.util.ArrayList;
 public class ParentAccount extends UserData {
     ArrayList<String> Children_id;
     String Email;
+    public ParentAccount() {
+        super();
+        Email = "";
+        Children_id = new ArrayList<String>();
+    }
     public ParentAccount(String ID, String Email) {
         super(ID);
         this.Email = Email;
@@ -30,6 +35,13 @@ public class ParentAccount extends UserData {
     }
     public String getEmail(){
         return Email;
+    }
+    public ArrayList<String> getChildrenid(){
+        return Children_id;
+    }
+
+    public void setChildrenid(ArrayList<String> Children_id){
+        this.Children_id = Children_id;
     }
     @Override
     public void WriteIntoDatabase(CallBack callback) {
@@ -50,11 +62,13 @@ public class ParentAccount extends UserData {
                 else {
                     DataSnapshot Snapshot = task.getResult();
                     ParentAccount Data = Snapshot.getValue(ParentAccount.class);
+               //     UserManager.mDatabase.child("test").setValue(Data.childrenid);
                     ParentAccount.this.ID = Data.ID;
                     ParentAccount.this.Account = Data.Account;
-                    ParentAccount.this.firstTime = Data.firstTime;
+                    ParentAccount.this.FirstTime = Data.FirstTime;
                     ParentAccount.this.Email = Data.Email;
                     ParentAccount.this.Children_id = Data.Children_id;
+                    //UserManager.mDatabase.child("test").setValue(ParentAccount.this.Children_id);
                     if(callback != null){
                         callback.onComplete();
                     }

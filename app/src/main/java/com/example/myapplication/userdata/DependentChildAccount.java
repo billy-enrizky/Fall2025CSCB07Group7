@@ -12,11 +12,13 @@ import com.google.firebase.database.DataSnapshot;
 
 public class DependentChildAccount extends ChildAccount {
 
+    public DependentChildAccount() {
+        super();
+    }
     public DependentChildAccount(String ID, String Parent_id) {
         super(ID);
         this.Parent_id = Parent_id;
         this.Account = accountType.DEP_CHILD;
-
     }
     @Override
     public void WriteIntoDatabase(CallBack callback) {
@@ -38,7 +40,7 @@ public class DependentChildAccount extends ChildAccount {
                     DependentChildAccount Data = Snapshot.getValue(DependentChildAccount.class);
                     DependentChildAccount.this.ID = Data.ID;
                     DependentChildAccount.this.Account = Data.Account;
-                    DependentChildAccount.this.firstTime = Data.firstTime;
+                    DependentChildAccount.this.FirstTime = Data.FirstTime;
                     if(callback != null){
                         callback.onComplete();
                     }
