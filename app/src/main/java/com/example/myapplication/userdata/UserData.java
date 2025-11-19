@@ -9,8 +9,6 @@ import com.example.myapplication.UserManager;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 enum accountType {PARENT, DEP_CHILD, INDEP_CHILD, PROVIDER}
 
@@ -76,11 +74,5 @@ public class UserData {
                 }
             }
         });
-    }
-
-    public void changeFirstTime(String UserID, Boolean ft){
-        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-        mDatabase.child("users").child(UserID).child("FirstTime").setValue(ft);
-        FirstTime = ft;
     }
 }
