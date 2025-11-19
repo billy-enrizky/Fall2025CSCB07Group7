@@ -42,6 +42,14 @@ public class UserData {
         this.FirstTime = FirstTime;
     }
 
+    public void setAccount (accountType Account) {
+        this.Account = Account;
+    }
+
+    public accountType getAccount() {
+        return this.Account;
+    }
+
     public void WriteIntoDatabase(CallBack callback) {
         UserManager.mDatabase.child("users").child(ID).setValue(this);
         if(callback != null){
