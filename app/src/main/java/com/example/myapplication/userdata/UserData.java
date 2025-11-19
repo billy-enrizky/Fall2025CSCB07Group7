@@ -40,7 +40,7 @@ public class UserData {
     }
 
     public void WriteIntoDatabase(CallBack callback) {
-        //UserManager.mDatabase.child("users").child(ID).setValue(this);
+        UserManager.mDatabase.child("users").child(ID).setValue(this);
         if(callback != null){
             callback.onComplete();
         }
