@@ -3,6 +3,7 @@ package com.example.myapplication.invitation;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -57,7 +58,12 @@ public class ProviderInvitationActivity extends AppCompatActivity {
                         currentProvider.addLinkedParents(Parent.getID());
                         currentProvider.WriteIntoDatabase(null);
                         Parent.WriteIntoDatabase(null);
+                        Toast.makeText(ProviderInvitationActivity.this, "Invitation accepted", Toast.LENGTH_SHORT).show();
+                    }else{
+                        Toast.makeText(ProviderInvitationActivity.this, "Already linked", Toast.LENGTH_SHORT).show();
                     }
+                }else{
+                    Toast.makeText(ProviderInvitationActivity.this, "No user found with this code", Toast.LENGTH_SHORT).show();
                 }
             }
         });
