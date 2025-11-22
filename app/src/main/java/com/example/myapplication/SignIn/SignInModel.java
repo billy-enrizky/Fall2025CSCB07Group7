@@ -4,9 +4,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.example.myapplication.CallBack;
 import com.example.myapplication.ResultCallBack;
-import com.example.myapplication.UserManager;
 import com.example.myapplication.userdata.UserData;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -34,17 +32,10 @@ public class SignInModel {
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
-                // if successful, notify user and return to main page.
                 if(task.isSuccessful()){
-                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-                    UserManager.currentUser.ReadFromDatabase(mAuth.getCurrentUser().getUid(),new CallBack() {
-                        @Override
-                        public void onComplete() {
-                            if(callBack != null){
-                                callBack.onComplete(true);
-                            }
-                        }
-                    });
+                    if (callBack != null) {
+                        callBack.onComplete(true);
+                    }
                 }else{
                     if(callBack != null){
                         callBack.onComplete(false);

@@ -32,18 +32,22 @@ public class SignInPresenter {
             @Override
             public void onComplete(Boolean result) {
                 if(result){
-                    view.showShortMessage("Welcome!");
+                    //view.showShortMessage("Welcome!");
                     String ID = model.GetCurrentUIDAuth();
                     model.QueryDB(ID, new ResultCallBack<UserData>() {
                         @Override
                         public void onComplete(UserData result) {
-                            UserManager.currentUser = result;
-                            if(UserManager.currentUser.getFirstTime()){
-                                Intent intent1 = new Intent(view, OnBoardingActivity.class);
-                                view.startActivity(intent1);
+                            if(result == null){
+                                //view.showShortMessage("!!!");
                             }else{
-                                Intent intent1 = new Intent(view, MainActivity.class);
-                                view.startActivity(intent1);
+                                UserManager.currentUser = result;
+                                if(UserManager.currentUser.getFirstTime()){
+                                    Intent intent1 = new Intent(view, OnBoardingActivity.class);
+                                    view.startActivity(intent1);
+                                }else{
+                                    Intent intent1 = new Intent(view, MainActivity.class);
+                                    view.startActivity(intent1);
+                                }
                             }
                         }
                     });
