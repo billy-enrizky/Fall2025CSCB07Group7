@@ -28,19 +28,19 @@ public class SignInView extends AppCompatActivity {
         SigninPresenter.initialize();
     }
 
-    void onClickSigninButton(android.view.View view){
-        //SigninPresenter.signin(emailEditText.getText().toString(), passwordEditText.getText().toString());
+    public void onClickSigninButton(android.view.View view){
+        SigninPresenter.signin(emailEditText.getText().toString(), passwordEditText.getText().toString());
     }
 
-    void onClickForgotPasswordButton(android.view.View view){
+    public void onClickForgotPasswordButton(android.view.View view){
         SigninPresenter.forgotPassword();
     }
 
-    void onClickSignupButton(android.view.View view){
+    public void onClickSignupButton(android.view.View view){
         SigninPresenter.signup();
     }
 
-    void showShortMessage(String message){
+    public void showShortMessage(String message){
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }
