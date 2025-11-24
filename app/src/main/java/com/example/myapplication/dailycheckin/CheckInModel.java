@@ -16,8 +16,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.time.LocalDate;
 import java.util.HashMap;
 
-public class CheckInManager {
-    public CheckInManager() {
+public class CheckInModel {
+    public CheckInModel() {
     }
     public String getDate(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
