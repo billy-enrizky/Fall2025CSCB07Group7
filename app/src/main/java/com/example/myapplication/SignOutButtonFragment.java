@@ -36,7 +36,7 @@ public class SignOutButtonFragment extends Fragment {
         signOutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(UserManager.currentUser.getAccount() == AccountType.DEP_CHILD){
+                if(UserManager.currentUser.getAccount() == AccountType.CHILD){
                     ChildAccount child = (ChildAccount) UserManager.currentUser;
                     UserManager.stopChildUserListener(child.getParent_id(),child.getID());
                 }else{

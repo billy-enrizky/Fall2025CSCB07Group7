@@ -77,6 +77,10 @@ public class SignInChildProfileActivity extends AppCompatActivity {
         finish();
     }
     public void changeNotes(android.view.View view){
+        if(currentChild == null){
+            Toast.makeText(this, "Please select a child", Toast.LENGTH_SHORT).show();
+            return;
+        }
         String notes = editTextText2.getText().toString();
         currentChild.setNotes(notes);
         currentChild.WriteIntoDatabase(null);

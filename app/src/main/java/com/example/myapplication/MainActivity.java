@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        if(UserManager.currentUser.getAccount() == AccountType.DEP_CHILD){
+        if(UserManager.currentUser.getAccount() == AccountType.CHILD){
             ChildAccount child = (ChildAccount) UserManager.currentUser;
             String parentID = child.getParent_id();
             String username = child.getID();
