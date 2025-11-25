@@ -24,7 +24,7 @@
         android:layout_marginStart="72dp"
         android:layout_marginTop="247dp"
         android:onClick="SignInChildrenProfile"
-        android:text="Sign In to Child"
+        android:text="Children Manager"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

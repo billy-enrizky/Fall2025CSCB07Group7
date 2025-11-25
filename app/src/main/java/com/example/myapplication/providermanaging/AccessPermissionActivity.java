@@ -48,13 +48,13 @@ public class AccessPermissionActivity extends AppCompatActivity {
         UserManager.isParentAccount(this);
         user = (ParentAccount) UserManager.currentUser;
         for(ChildAccount child: user.getChildren().values()){
-        //    if(child.getPermission() == null){
-             //   child.setPermission(new Permission());
-          //  }
+            if(child.getPermission() == null){
+                child.setPermission(new Permission());
+            }
         }
+        UserManager.currentUser.WriteIntoDatabase(null);
         textView33 = findViewById(R.id.textView33);
         container = findViewById(R.id.ChildList2);
-        UserManager.currentUser.WriteIntoDatabase(null);
         currentChild = null;
         rescueLogsCB = findViewById(R.id.RL);
         controllerAdherenceSummaryCB = findViewById(R.id.CAS);
