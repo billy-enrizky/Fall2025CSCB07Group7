@@ -22,6 +22,7 @@ public class ChildAccount extends UserData {
         this.notes = notes;
         this.age = age;
         this.ID = ID;
+        Account = AccountType.CHILD;
     }
     public void setDob(String Dob) {
         this.dob = Dob;
@@ -62,5 +63,4 @@ public class ChildAccount extends UserData {
     public String getAge(){
         return age;
     }
-
 }
