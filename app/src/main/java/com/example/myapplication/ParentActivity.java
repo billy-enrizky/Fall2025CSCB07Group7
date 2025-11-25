@@ -2,25 +2,55 @@ package com.example.myapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.myapplication.safety.PEFReading;
+import com.example.myapplication.safety.SetPersonalBestActivity;
+import com.example.myapplication.safety.Zone;
+import com.example.myapplication.safety.ZoneCalculator;
+import com.example.myapplication.userdata.ChildAccount;
+import com.example.myapplication.userdata.ParentAccount;
 import com.example.myapplication.SignIn.SignInView;
 import com.example.myapplication.childmanaging.SignInChildProfileActivity;
 import com.example.myapplication.childmanaging.CreateChildActivity;
 import com.example.myapplication.providermanaging.AccessPermissionActivity;
 import com.example.myapplication.providermanaging.InvitationCreateActivity;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class ParentActivity extends AppCompatActivity {
-
-    Button createChildButton;
+    private static final String TAG = "ParentActivity";
+    
+    private RecyclerView recyclerViewChildren;
+    private Button createChildButton;
+    private ParentAccount parentAccount;
+    private ChildrenZoneAdapter adapter;
+    private List<ChildZoneInfo> childrenZoneInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,23 +62,158 @@ public class ParentActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        createChildButton = (Button)findViewById(R.id.createChildPageButton);
+        
+        if (!(UserManager.currentUser instanceof ParentAccount)) {
+            Log.e(TAG, "Current user is not a ParentAccount");
+            finish();
+            return;
+        }
+        
+        parentAccount = (ParentAccount) UserManager.currentUser;
+        
+        recyclerViewChildren = findViewById(R.id.recyclerViewChildren);
+        createChildButton = findViewById(R.id.createChildPageButton);
+        childrenZoneInfo = new ArrayList<>();
+        adapter = new ChildrenZoneAdapter(childrenZoneInfo);
+        recyclerViewChildren.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewChildren.setAdapter(adapter);
+        
         createChildButton.setOnClickListener(new View.OnClickListener() {
-            // On click: execute following coding
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ParentActivity.this, CreateChildActivity.class);
                 startActivity(intent);
             }
         });
+        
+        registerFCMToken();
+        loadChildrenZones();
+    }
+    
+    private void registerFCMToken() {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+                        return;
+                    }
+                    
+                    String token = task.getResult();
+                    Log.d(TAG, "FCM Registration Token: " + token);
+                    
+                    if (parentAccount != null && token != null) {
+                        String parentId = parentAccount.getID();
+                        UserManager.mDatabase.child("users").child(parentId).child("fcmToken").setValue(token)
+                                .addOnCompleteListener(setTask -> {
+                                    if (setTask.isSuccessful()) {
+                                        Log.d(TAG, "FCM token saved to database");
+                                    } else {
+                                        Log.e(TAG, "Failed to save FCM token", setTask.getException());
+                                    }
+                                });
+                    }
+                });
     }
 
-    public void SignInChildrenProfile(android.view.View view){
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadChildrenZones();
+    }
+
+    private void loadChildrenZones() {
+        if (parentAccount == null || parentAccount.getChildren() == null) {
+            return;
+        }
+        
+        childrenZoneInfo.clear();
+        HashMap<String, ChildAccount> children = parentAccount.getChildren();
+        
+        if (children.isEmpty()) {
+            adapter.notifyDataSetChanged();
+            return;
+        }
+        
+        for (Map.Entry<String, ChildAccount> entry : children.entrySet()) {
+            ChildAccount child = entry.getValue();
+            loadChildZone(child);
+        }
+    }
+
+    private void loadChildZone(ChildAccount child) {
+        String parentId = child.getParent_id();
+        String childId = child.getID();
+        Integer personalBest = child.getPersonalBest();
+        
+        if (personalBest == null || personalBest <= 0) {
+            ChildZoneInfo info = new ChildZoneInfo(child, Zone.UNKNOWN, 0.0, null, null);
+            updateChildZoneInfo(info);
+            return;
+        }
+        
+        DatabaseReference pefRef = UserManager.mDatabase
+                .child("users")
+                .child(parentId)
+                .child("children")
+                .child(childId)
+                .child("pefReadings");
+        
+        Query latestPEFQuery = pefRef.orderByChild("timestamp").limitToLast(1);
+        
+        latestPEFQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                PEFReading latestReading = null;
+                if (snapshot.exists() && snapshot.hasChildren()) {
+                    for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                        latestReading = childSnapshot.getValue(PEFReading.class);
+                        break;
+                    }
+                }
+                
+                Zone zone = Zone.UNKNOWN;
+                double percentage = 0.0;
+                String lastPEFDate = null;
+                
+                if (latestReading != null) {
+                    int pefValue = latestReading.getValue();
+                    zone = ZoneCalculator.calculateZone(pefValue, personalBest);
+                    percentage = ZoneCalculator.calculatePercentage(pefValue, personalBest);
+                    SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+                    lastPEFDate = sdf.format(new Date(latestReading.getTimestamp()));
+                }
+                
+                ChildZoneInfo info = new ChildZoneInfo(child, zone, percentage, lastPEFDate, latestReading);
+                updateChildZoneInfo(info);
+            }
+            
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e(TAG, "Error loading child zone", error.toException());
+                ChildZoneInfo info = new ChildZoneInfo(child, Zone.UNKNOWN, 0.0, null, null);
+                updateChildZoneInfo(info);
+            }
+        });
+    }
+
+    private void updateChildZoneInfo(ChildZoneInfo newInfo) {
+        for (int i = 0; i < childrenZoneInfo.size(); i++) {
+            if (childrenZoneInfo.get(i).child.getID().equals(newInfo.child.getID())) {
+                childrenZoneInfo.set(i, newInfo);
+                adapter.notifyItemChanged(i);
+                return;
+            }
+        }
+        childrenZoneInfo.add(newInfo);
+        adapter.notifyItemInserted(childrenZoneInfo.size() - 1);
+    }
+
+    public void SignInChildrenProfile(android.view.View view) {
         Intent intent = new Intent(ParentActivity.this, SignInChildProfileActivity.class);
         startActivity(intent);
     }
 
-    public void Signout(android.view.View view){
+    public void Signout(android.view.View view) {
         UserManager.currentUser = null;
         FirebaseAuth.getInstance().signOut();
         Intent intent = new Intent(this, SignInView.class);
@@ -56,31 +221,96 @@ public class ParentActivity extends AppCompatActivity {
         finish();
     }
 
-    public void CreateInvitation(android.view.View view){
+    public void CreateInvitation(android.view.View view) {
         Intent intent = new Intent(this, InvitationCreateActivity.class);
         startActivity(intent);
         this.finish();
     }
 
-    public void AccessPermission(android.view.View view){
+    public void AccessPermission(android.view.View view) {
         Intent intent = new Intent(this, AccessPermissionActivity.class);
         startActivity(intent);
         this.finish();
     }
-    @Override
-    public void onResume() {
-        super.onResume();
+
+    private static class ChildZoneInfo {
+        ChildAccount child;
+        Zone zone;
+        double percentage;
+        String lastPEFDate;
+        PEFReading latestReading;
+
+        ChildZoneInfo(ChildAccount child, Zone zone, double percentage, String lastPEFDate, PEFReading latestReading) {
+            this.child = child;
+            this.zone = zone;
+            this.percentage = percentage;
+            this.lastPEFDate = lastPEFDate;
+            this.latestReading = latestReading;
+        }
     }
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-    @Override
-    public void onStop() {
-        super.onStop();
-    }
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+
+    private class ChildrenZoneAdapter extends RecyclerView.Adapter<ChildrenZoneAdapter.ViewHolder> {
+        private List<ChildZoneInfo> children;
+
+        public ChildrenZoneAdapter(List<ChildZoneInfo> children) {
+            this.children = children;
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_child_zone, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            ChildZoneInfo info = children.get(position);
+            holder.textViewChildName.setText(info.child.getName());
+            holder.textViewZoneName.setText(info.zone.getDisplayName());
+            holder.textViewZoneName.setTextColor(info.zone.getColorResource());
+            
+            if (info.zone != Zone.UNKNOWN) {
+                holder.textViewZonePercentage.setText(String.format(Locale.getDefault(), "%.1f%% of Personal Best", info.percentage));
+                holder.textViewZonePercentage.setVisibility(View.VISIBLE);
+            } else {
+                holder.textViewZonePercentage.setText("Personal Best not set or no PEF readings");
+                holder.textViewZonePercentage.setVisibility(View.VISIBLE);
+            }
+            
+            if (info.lastPEFDate != null) {
+                holder.textViewLastPEF.setText("Last PEF: " + info.lastPEFDate);
+                holder.textViewLastPEF.setVisibility(View.VISIBLE);
+            } else {
+                holder.textViewLastPEF.setVisibility(View.GONE);
+            }
+            
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(ParentActivity.this, SetPersonalBestActivity.class);
+                intent.putExtra("childId", info.child.getID());
+                intent.putExtra("parentId", info.child.getParent_id());
+                startActivity(intent);
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return children.size();
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView textViewChildName;
+            TextView textViewZoneName;
+            TextView textViewZonePercentage;
+            TextView textViewLastPEF;
+
+            ViewHolder(View itemView) {
+                super(itemView);
+                textViewChildName = itemView.findViewById(R.id.textViewChildName);
+                textViewZoneName = itemView.findViewById(R.id.textViewZoneName);
+                textViewZonePercentage = itemView.findViewById(R.id.textViewZonePercentage);
+                textViewLastPEF = itemView.findViewById(R.id.textViewLastPEF);
+            }
+        }
     }
 }
