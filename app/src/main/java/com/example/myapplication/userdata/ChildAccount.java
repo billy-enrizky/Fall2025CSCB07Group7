@@ -20,6 +20,7 @@ public class ChildAccount extends UserData {
     String notes;
     String age;
     Permission permission;
+    Integer personalBest;
 
     public ChildAccount(String ID) {
         super(ID);
@@ -88,6 +89,12 @@ public class ChildAccount extends UserData {
     public String getAge(){
         return age;
     }
+    public Integer getPersonalBest() {
+        return personalBest;
+    }
+    public void setPersonalBest(Integer personalBest) {
+        this.personalBest = personalBest;
+    }
     @Override
     public void WriteIntoDatabase(CallBack callback) {
         UserManager.mDatabase.child("users").child(Parent_id).child("children").child(ID).setValue(this).addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -121,6 +128,7 @@ public class ChildAccount extends UserData {
                     ChildAccount.this.password = Data.password;
                     ChildAccount.this.name = Data.name;
                     ChildAccount.this.permission = Data.permission;
+                    ChildAccount.this.personalBest = Data.personalBest;
                     if(callback != null){
                         callback.onComplete();
                     }
