@@ -35,7 +35,7 @@ public class ChildAccount extends UserData {
         this.notes = notes;
         this.age = age;
         this.ID = ID;
-        this.Account = AccountType.DEP_CHILD;
+        this.Account = AccountType.CHILD;
         this.FirstTime = true;
         this.permission = new Permission();
     }
