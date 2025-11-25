@@ -2,8 +2,11 @@ package com.example.myapplication.childmanaging;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +24,9 @@ import com.example.myapplication.userdata.ParentAccount;
 public class SignInChildProfileActivity extends AppCompatActivity {
     ParentAccount user;
     LinearLayout container;
+    ChildAccount currentChild;
+    TextView textView23;
+    EditText editTextText2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,6 +40,9 @@ public class SignInChildProfileActivity extends AppCompatActivity {
         UserManager.isParentAccount(this);
         user = (ParentAccount) UserManager.currentUser;
         container = findViewById(R.id.childListContainer);
+        textView23 = findViewById(R.id.textView23);
+        editTextText2 = findViewById(R.id.editTextText2);
+        currentChild = null;
         for(ChildAccount child : user.getChildren().values()){
             addChildToUI(child);
         }
@@ -50,13 +59,32 @@ public class SignInChildProfileActivity extends AppCompatActivity {
         tv.setTextSize(20);
         tv.setPadding(40,30,40,30);
         tv.setOnClickListener(v -> {
-            UserManager.currentUser = child;
-            UserManager.mAuth.signOut();
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
-            finish();
+            currentChild = child;
+            textView23.setText("Current Child: " + currentChild.getName() +   "\nClick name to switch");
         });
-
         container.addView(tv);
+    }
+
+    public void ChildSignin(android.view.View view){
+        if(currentChild == null){
+            Toast.makeText(this, "Please select a child", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        UserManager.currentUser = currentChild;
+        UserManager.mAuth.signOut();
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+    public void changeNotes(android.view.View view){
+        String notes = editTextText2.getText().toString();
+        currentChild.setNotes(notes);
+        currentChild.WriteIntoDatabase(null);
+        View keep = container.getChildAt(0);
+        container.removeAllViews();
+        container.addView(keep);
+        for(ChildAccount child : user.getChildren().values()){
+            addChildToUI(child);
+        }
     }
 }
