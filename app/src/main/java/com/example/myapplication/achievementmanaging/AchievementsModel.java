@@ -24,6 +24,17 @@ public class AchievementsModel {
             }
         });
     }
+     /*     The way to use reading method is as follows:
+        Say you want to read the DB, and then use the info to do thing A
+        AchievementsModel.readFromDB(username, new ResultCallBack<HashMap<String,Achievement>>(){
+            @Override
+            public void onComplete(HashMap<String,Achievement> result){
+                                <Here are the info you get (result)↑ >
+                  <attach A here>
+            }
+        });
+        <It's incorrect to attach A here, as reading might haven't done>
+*/
 
     public static void readFromDB(String username, ResultCallBack<Achievement> callback) {
         UserManager.mDatabase.child("AchievementsManager").child(username)
