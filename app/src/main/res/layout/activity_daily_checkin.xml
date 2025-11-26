@@ -11,11 +11,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="55dp"
-        android:layout_marginTop="43dp"
+        android:layout_marginTop="104dp"
         android:layout_marginEnd="55dp"
         android:text="Daily Check-in"
         android:textSize="48sp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -24,7 +25,7 @@
         android:layout_width="362dp"
         android:layout_height="106dp"
         android:layout_marginStart="27dp"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="1dp"
         android:layout_marginEnd="22dp"
         android:text="Woke up last night due to coughing/wheezing"
         android:textSize="28sp"
@@ -57,12 +58,14 @@
             android:id="@+id/some_interfere_chip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:checkable="true"
             android:text="Symptoms somewhat interfered with physical activity" />
 
         <com.google.android.material.chip.Chip
             android:id="@+id/all_interfere_chip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:checkable="true"
             android:text="Symptoms greatly interfered with physical activity" />
 
     </com.google.android.material.chip.ChipGroup>
@@ -116,6 +119,7 @@
         android:layout_marginStart="100dp"
         android:layout_marginTop="29dp"
         android:layout_marginEnd="124dp"
+        android:onClick="runCheckIn"
         android:text="Log"
         android:textSize="40sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -177,6 +181,19 @@
             android:text="Perfume/cleaners/strong odors" />
 
     </com.google.android.material.chip.ChipGroup>
+
+    <Button
+        android:id="@+id/leaveCheckIn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="13dp"
+        android:layout_marginTop="23dp"
+        android:layout_marginEnd="310dp"
+        android:onClick="goBack"
+        android:text="Back"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

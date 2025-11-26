@@ -1,5 +1,6 @@
 package com.example.myapplication.dailycheckin;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
@@ -7,7 +8,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.myapplication.ChildActivity;
 import com.example.myapplication.R;
+import com.example.myapplication.ResetPasswordActivity;
 import com.example.myapplication.UserManager;
 import com.example.myapplication.childmanaging.SignInChildProfileActivity;
 import com.example.myapplication.userdata.AccountType;
@@ -34,16 +37,28 @@ public class CheckInView extends AppCompatActivity {
         activityLimitsChips = (ChipGroup) findViewById(R.id.activity_limits);
         coughWheezeLevelSlider = (Slider) findViewById(R.id.cough_wheeze_slider);
         triggersChips = (ChipGroup) findViewById(R.id.triggers);
-        /*if (UserManager.currentUser.getAccount().equals(AccountType.CHILD)) {
+        if (UserManager.currentUser.getAccount().equals(AccountType.CHILD)) {
             this.username = ((ChildAccount)UserManager.currentUser).getID();
         } else {
             this.username = SignInChildProfileActivity.getCurrentChildUsername();
-        }*/
+        }
         presenter = new CheckInPresenter(this, new CheckInModel());
         presenter.initialize();
+
     }
 
-    public void goToCheckInActivity (android.view.View view) {
+    public void goBack (android.view.View view) {
+        if (UserManager.currentUser.getAccount().equals(AccountType.PARENT)) {
+            Intent intent = new Intent(this, SignInChildProfileActivity.class);
+            startActivity(intent);
+        } else {
+            Intent intent = new Intent(this, ChildActivity.class);
+            startActivity(intent);
+        }
+        finish();
+    }
+
+    public void runCheckIn (android.view.View view) {
         int selectedActivityLimitId = activityLimitsChips.getCheckedChipId();
         if (selectedActivityLimitId == View.NO_ID) {
             showShortMessage("Must select an activity limit!");
@@ -58,9 +73,12 @@ public class CheckInView extends AppCompatActivity {
             Chip triggerChip = triggersChips.findViewById(id);
             triggers.add(triggerChip.getText().toString());
         }
-        CheckInPresenter.logEntry(this.username, nightWakingCheck.isChecked(), selectedActivityLimitText, coughWheezeLevelSlider.getValue(), triggers);
+        presenter.logEntry(this.username, nightWakingCheck.isChecked(), selectedActivityLimitText, coughWheezeLevelSlider.getValue(), triggers);
+
     }
     public void showShortMessage(String message){
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
+
+
 }

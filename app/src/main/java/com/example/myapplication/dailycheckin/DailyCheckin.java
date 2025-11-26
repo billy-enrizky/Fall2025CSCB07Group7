@@ -36,6 +36,12 @@ public class DailyCheckin {
     public void setLoggedBy(AccountType loggedBy) {
         this.loggedBy = loggedBy;
     }
+    public void setNightWaking(boolean nightWaking) {
+        this.nightWaking = nightWaking;
+    }
+    public boolean getNightWaking() {
+        return this.nightWaking;
+    }
     public String getActivityLimits() {
         return this.activityLimits;
     }

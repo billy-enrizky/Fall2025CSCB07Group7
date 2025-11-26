@@ -29,8 +29,9 @@ public class CheckInPresenter {
         //model.ReloadUserAuth();
     }
 
-    static void logEntry(String username, boolean nightWaking, String activityLimits, double coughWheezeLevel, ArrayList<String> triggers) {
+    void logEntry(String username, boolean nightWaking, String activityLimits, double coughWheezeLevel, ArrayList<String> triggers) {
         DailyCheckin entry = new DailyCheckin(username, nightWaking, activityLimits, coughWheezeLevel, triggers);
+        //view.showShortMessage("Entry for " + username + ". Night Waking: " + nightWaking + ". " + activityLimits + ". Level:" + coughWheezeLevel);
         model.WriteIntoDB(entry, new CallBack() {
             @Override
             public void onComplete() {
