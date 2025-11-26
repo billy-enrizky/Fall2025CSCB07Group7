@@ -1,4 +1,4 @@
-/*package com.example.myapplication;
+package com.example.myapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,11 +11,13 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.example.myapplication.SignIn.SignInView;
+import com.example.myapplication.dailycheckin.CheckInView;
+import com.example.myapplication.userdata.AccountType;
+import com.example.myapplication.userdata.ChildAccount;
 import com.google.firebase.auth.FirebaseAuth;
 
-public/class SignOutButtonFragment extends Fragment {
-
-    public SignOutButtonFragment() {
+public class GoToDailyCheckinFragment extends Fragment {
+    public GoToDailyCheckinFragment() {
         // Required empty public constructor
     }
 
@@ -23,26 +25,21 @@ public/class SignOutButtonFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_signoutbutton, container, false);
+        return inflater.inflate(R.layout.fragment_leave_daily_checkin, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        Button signOutButton = view.findViewById(R.id.button4);
-        signOutButton.setOnClickListener(new View.OnClickListener() {
+        Button checkInButton = view.findViewById(R.id.goToDailyCheckIn);
+        checkInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(UserManager.mAuth.getUid() != null){
-                    UserManager.stopUserListener(UserManager.mAuth.getUid());
-                }
-                UserManager.currentUser = null;
-                FirebaseAuth.getInstance().signOut();
-                Intent intent = new Intent(getActivity(), SignInView.class);
+                Intent intent = new Intent(getActivity(), CheckInView.class);
                 startActivity(intent);
                 getActivity().finish();
             }
         });
     }
-}*/
+}

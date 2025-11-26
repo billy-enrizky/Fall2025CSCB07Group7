@@ -32,7 +32,7 @@ public class CheckInModel {
     //I didn't use the "users" node, but the a new node "CheckInManager"
     //Because we need to read "users" when sign in,
     //I don't wanna make sign in too slow.
-    public static void WriteIntoDB(DailyCheckin checkin, CallBack callback){
+    public void WriteIntoDB(DailyCheckin checkin, CallBack callback){
         String Date = getDate();
         UserManager.mDatabase.child("CheckInManager")
                 .child(checkin.username).child(Date).setValue(checkin)
@@ -57,7 +57,7 @@ public class CheckInModel {
         });
         <It's incorrect to attach A here, as reading might haven't done>
 */
-    public static void readFromDB(String username, ResultCallBack<HashMap<String,DailyCheckin>> callback){
+    public void readFromDB(String username, ResultCallBack<HashMap<String,DailyCheckin>> callback){
         UserManager.mDatabase.child("CheckInManager").child(username)
             .addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
