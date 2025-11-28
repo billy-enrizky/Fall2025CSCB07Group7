@@ -29,6 +29,25 @@
             android:text="PEF: 0 L/min"
             android:textSize="18sp" />
 
+        <TextView
+            android:id="@+id/textViewZoneInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text=""
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/textViewZonePercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text=""
+            android:textSize="14sp"
+            android:visibility="gone" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -61,6 +80,14 @@
             android:text=""
             android:textSize="14sp"
             android:visibility="gone" />
+
+        <Button
+            android:id="@+id/buttonDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Delete"
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>
 

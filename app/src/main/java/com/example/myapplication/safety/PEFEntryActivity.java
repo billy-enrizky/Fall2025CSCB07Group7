@@ -184,16 +184,14 @@ public class PEFEntryActivity extends AppCompatActivity {
                     }
                 }
 
-                if (previousZone != newZone) {
-                    ZoneChangeEvent zoneChange = new ZoneChangeEvent(
-                            System.currentTimeMillis(),
-                            previousZone,
-                            newZone,
-                            pefValue,
-                            percentage
-                    );
-                    historyRef.child(String.valueOf(zoneChange.getTimestamp())).setValue(zoneChange);
-                }
+                ZoneChangeEvent zoneChange = new ZoneChangeEvent(
+                        System.currentTimeMillis(),
+                        previousZone,
+                        newZone,
+                        pefValue,
+                        percentage
+                );
+                historyRef.child(String.valueOf(zoneChange.getTimestamp())).setValue(zoneChange);
             });
         });
     }
