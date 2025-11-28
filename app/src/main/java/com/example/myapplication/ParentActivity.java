@@ -275,16 +275,16 @@ public class ParentActivity extends AppCompatActivity {
 
         public ChildrenZoneAdapter(List<ChildZoneInfo> children) {
             this.children = children;
-        }
+    }
 
-        @Override
+    @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_child_zone, parent, false);
             return new ViewHolder(view);
-        }
+    }
 
-        @Override
+    @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
             if (position < 0 || position >= children.size()) {
                 return;
@@ -325,7 +325,7 @@ public class ParentActivity extends AppCompatActivity {
             });
         }
 
-        @Override
+    @Override
         public int getItemCount() {
             return children.size();
         }
@@ -342,7 +342,7 @@ public class ParentActivity extends AppCompatActivity {
                 textViewZoneName = itemView.findViewById(R.id.textViewZoneName);
                 textViewZonePercentage = itemView.findViewById(R.id.textViewZonePercentage);
                 textViewLastPEF = itemView.findViewById(R.id.textViewLastPEF);
-            }
-        }
+    }
+}
     }
 }

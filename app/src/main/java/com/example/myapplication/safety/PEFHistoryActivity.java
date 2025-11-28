@@ -41,6 +41,8 @@ public class PEFHistoryActivity extends AppCompatActivity {
     private TextView textViewEmpty;
     private HistoryAdapter adapter;
     private List<HistoryItem> historyItems;
+    private String parentId;
+    private String childId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,9 +55,6 @@ public class PEFHistoryActivity extends AppCompatActivity {
             return insets;
         });
 
-        String childId;
-        String parentId;
-        
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("childId") && intent.hasExtra("parentId")) {
             childId = intent.getStringExtra("childId");
@@ -74,6 +73,7 @@ public class PEFHistoryActivity extends AppCompatActivity {
         textViewEmpty = findViewById(R.id.textViewEmpty);
         Button buttonBack = findViewById(R.id.buttonBack);
         Button buttonEnterPEF = findViewById(R.id.buttonEnterPEF);
+        Button buttonRemoveAll = findViewById(R.id.buttonRemoveAll);
         
         buttonBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,11 +92,22 @@ public class PEFHistoryActivity extends AppCompatActivity {
             }
         });
         
+        buttonRemoveAll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                removeAllHistory();
+            }
+        });
+        
         historyItems = new ArrayList<>();
-        adapter = new HistoryAdapter(historyItems);
+        adapter = new HistoryAdapter(historyItems, parentId, childId, this);
         recyclerViewPEF.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewPEF.setAdapter(adapter);
 
+        loadHistory(parentId, childId);
+    }
+    
+    public void refreshHistory() {
         loadHistory(parentId, childId);
     }
 
@@ -123,6 +134,9 @@ public class PEFHistoryActivity extends AppCompatActivity {
         final int[] loadCount = {0};
         final int totalLoads = 2;
 
+        final List<PEFReading> pefReadings = new ArrayList<>();
+        final List<ZoneChangeEvent> zoneChanges = new ArrayList<>();
+
         pefQuery.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
@@ -130,22 +144,13 @@ public class PEFHistoryActivity extends AppCompatActivity {
                     for (DataSnapshot child : snapshot.getChildren()) {
                         PEFReading reading = child.getValue(PEFReading.class);
                         if (reading != null) {
-                            historyItems.add(new HistoryItem(reading));
+                            pefReadings.add(reading);
                         }
                     }
                 }
                 loadCount[0]++;
                 if (loadCount[0] == totalLoads) {
-                    Collections.sort(historyItems, (a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
-                    adapter.notifyDataSetChanged();
-                    
-                    if (historyItems.isEmpty()) {
-                        textViewEmpty.setVisibility(View.VISIBLE);
-                        recyclerViewPEF.setVisibility(View.GONE);
-                    } else {
-                        textViewEmpty.setVisibility(View.GONE);
-                        recyclerViewPEF.setVisibility(View.VISIBLE);
-                    }
+                    combineAndDisplayHistory(pefReadings, zoneChanges);
                 }
             }
 
@@ -153,6 +158,9 @@ public class PEFHistoryActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError error) {
                 Log.e(TAG, "Error loading PEF history", error.toException());
                 loadCount[0]++;
+                if (loadCount[0] == totalLoads) {
+                    combineAndDisplayHistory(pefReadings, zoneChanges);
+                }
             }
         });
 
@@ -162,25 +170,14 @@ public class PEFHistoryActivity extends AppCompatActivity {
                 if (snapshot.exists()) {
                     for (DataSnapshot child : snapshot.getChildren()) {
                         ZoneChangeEvent event = child.getValue(ZoneChangeEvent.class);
-                        if (event != null && event.getNewZone() != null && event.getPreviousZone() != null) {
-                            if (event.getPreviousZone() != Zone.UNKNOWN || event.getNewZone() != Zone.UNKNOWN) {
-                                historyItems.add(new HistoryItem(event));
-                            }
+                        if (event != null && event.getNewZone() != null) {
+                            zoneChanges.add(event);
                         }
                     }
                 }
                 loadCount[0]++;
                 if (loadCount[0] == totalLoads) {
-                    Collections.sort(historyItems, (a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
-                    adapter.notifyDataSetChanged();
-                    
-                    if (historyItems.isEmpty()) {
-                        textViewEmpty.setVisibility(View.VISIBLE);
-                        recyclerViewPEF.setVisibility(View.GONE);
-                    } else {
-                        textViewEmpty.setVisibility(View.GONE);
-                        recyclerViewPEF.setVisibility(View.VISIBLE);
-                    }
+                    combineAndDisplayHistory(pefReadings, zoneChanges);
                 }
             }
 
@@ -188,8 +185,148 @@ public class PEFHistoryActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError error) {
                 Log.e(TAG, "Error loading zone change history", error.toException());
                 loadCount[0]++;
+                if (loadCount[0] == totalLoads) {
+                    combineAndDisplayHistory(pefReadings, zoneChanges);
+                }
             }
         });
+    }
+
+    private void combineAndDisplayHistory(List<PEFReading> pefReadings, List<ZoneChangeEvent> zoneChanges) {
+        historyItems.clear();
+        
+        for (PEFReading reading : pefReadings) {
+            ZoneChangeEvent matchingZoneChange = null;
+            long readingTimestamp = reading.getTimestamp();
+            
+            for (ZoneChangeEvent event : zoneChanges) {
+                if (Math.abs(event.getTimestamp() - readingTimestamp) < 1000) {
+                    matchingZoneChange = event;
+                    break;
+                }
+            }
+            
+            if (matchingZoneChange != null) {
+                historyItems.add(new HistoryItem(reading, matchingZoneChange));
+                zoneChanges.remove(matchingZoneChange);
+            } else {
+                historyItems.add(new HistoryItem(reading));
+            }
+        }
+        
+        for (ZoneChangeEvent event : zoneChanges) {
+            historyItems.add(new HistoryItem(event));
+        }
+        
+        Collections.sort(historyItems, (a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+        adapter.notifyDataSetChanged();
+        
+        if (historyItems.isEmpty()) {
+            textViewEmpty.setVisibility(View.VISIBLE);
+            recyclerViewPEF.setVisibility(View.GONE);
+        } else {
+            textViewEmpty.setVisibility(View.GONE);
+            recyclerViewPEF.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void removeAllHistory() {
+        DatabaseReference pefRef = UserManager.mDatabase
+                .child("users")
+                .child(parentId)
+                .child("children")
+                .child(childId)
+                .child("pefReadings");
+
+        DatabaseReference historyRef = UserManager.mDatabase
+                .child("users")
+                .child(parentId)
+                .child("children")
+                .child(childId)
+                .child("history");
+
+        pefRef.removeValue().addOnCompleteListener(task1 -> {
+            historyRef.removeValue().addOnCompleteListener(task2 -> {
+                if (task1.isSuccessful() && task2.isSuccessful()) {
+                    historyItems.clear();
+                    adapter.notifyDataSetChanged();
+                    textViewEmpty.setVisibility(View.VISIBLE);
+                    recyclerViewPEF.setVisibility(View.GONE);
+                    android.widget.Toast.makeText(this, "All history removed", android.widget.Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.e(TAG, "Failed to remove all history");
+                    android.widget.Toast.makeText(this, "Failed to remove all history", android.widget.Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+    }
+
+    private void deleteHistoryItem(HistoryItem item, int position) {
+        if (item.isZoneChange()) {
+            ZoneChangeEvent event = item.getZoneChange();
+            DatabaseReference historyRef = UserManager.mDatabase
+                    .child("users")
+                    .child(parentId)
+                    .child("children")
+                    .child(childId)
+                    .child("history")
+                    .child(String.valueOf(event.getTimestamp()));
+
+            historyRef.removeValue().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    historyItems.remove(position);
+                    adapter.notifyItemRemoved(position);
+                    adapter.notifyItemRangeChanged(position, historyItems.size() - position);
+                    
+                    if (historyItems.isEmpty()) {
+                        textViewEmpty.setVisibility(View.VISIBLE);
+                        recyclerViewPEF.setVisibility(View.GONE);
+                    }
+                    android.widget.Toast.makeText(this, "Zone change removed", android.widget.Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.e(TAG, "Failed to delete zone change", task.getException());
+                    android.widget.Toast.makeText(this, "Failed to delete zone change", android.widget.Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            PEFReading reading = item.getPefReading();
+            DatabaseReference pefRef = UserManager.mDatabase
+                    .child("users")
+                    .child(parentId)
+                    .child("children")
+                    .child(childId)
+                    .child("pefReadings")
+                    .child(String.valueOf(reading.getTimestamp()));
+
+            pefRef.removeValue().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    if (item.hasZoneChange()) {
+                        ZoneChangeEvent event = item.getZoneChange();
+                        DatabaseReference historyRef = UserManager.mDatabase
+                                .child("users")
+                                .child(parentId)
+                                .child("children")
+                                .child(childId)
+                                .child("history")
+                                .child(String.valueOf(event.getTimestamp()));
+                        historyRef.removeValue();
+                    }
+                    
+                    historyItems.remove(position);
+                    adapter.notifyItemRemoved(position);
+                    adapter.notifyItemRangeChanged(position, historyItems.size() - position);
+                    
+                    if (historyItems.isEmpty()) {
+                        textViewEmpty.setVisibility(View.VISIBLE);
+                        recyclerViewPEF.setVisibility(View.GONE);
+                    }
+                    android.widget.Toast.makeText(this, "PEF reading removed", android.widget.Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.e(TAG, "Failed to delete PEF reading", task.getException());
+                    android.widget.Toast.makeText(this, "Failed to delete PEF reading", android.widget.Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     private static class HistoryItem {
@@ -207,6 +344,12 @@ public class PEFHistoryActivity extends AppCompatActivity {
             this.isZoneChange = true;
         }
 
+        HistoryItem(PEFReading reading, ZoneChangeEvent event) {
+            this.pefReading = reading;
+            this.zoneChange = event;
+            this.isZoneChange = false;
+        }
+
         long getTimestamp() {
             return isZoneChange ? zoneChange.getTimestamp() : pefReading.getTimestamp();
         }
@@ -222,6 +365,10 @@ public class PEFHistoryActivity extends AppCompatActivity {
         ZoneChangeEvent getZoneChange() {
             return zoneChange;
         }
+
+        boolean hasZoneChange() {
+            return zoneChange != null;
+        }
     }
 
     private static class HistoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -230,9 +377,15 @@ public class PEFHistoryActivity extends AppCompatActivity {
         
         private List<HistoryItem> items;
         private SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+        private String parentId;
+        private String childId;
+        private PEFHistoryActivity activity;
 
-        public HistoryAdapter(List<HistoryItem> items) {
+        public HistoryAdapter(List<HistoryItem> items, String parentId, String childId, PEFHistoryActivity activity) {
             this.items = items;
+            this.parentId = parentId;
+            this.childId = childId;
+            this.activity = activity;
         }
 
         @Override
@@ -263,6 +416,26 @@ public class PEFHistoryActivity extends AppCompatActivity {
                 pefHolder.textViewDate.setText(sdf.format(new Date(reading.getTimestamp())));
                 pefHolder.textViewPEFValue.setText("PEF: " + reading.getValue() + " L/min");
                 
+                if (item.hasZoneChange()) {
+                    ZoneChangeEvent event = item.getZoneChange();
+                    String zoneText;
+                    if (event.getPreviousZone() == event.getNewZone()) {
+                        zoneText = "Remains in " + event.getNewZone().getDisplayName();
+                    } else {
+                        zoneText = event.getPreviousZone().getDisplayName() + " → " + event.getNewZone().getDisplayName();
+                    }
+                    pefHolder.textViewZoneInfo.setText(zoneText);
+                    pefHolder.textViewZoneInfo.setTextColor(event.getNewZone().getColorResource());
+                    pefHolder.textViewZoneInfo.setVisibility(View.VISIBLE);
+                    
+                    String percentageText = String.format(Locale.getDefault(), "%.1f%% of Personal Best", event.getPercentage());
+                    pefHolder.textViewZonePercentage.setText(percentageText);
+                    pefHolder.textViewZonePercentage.setVisibility(View.VISIBLE);
+                } else {
+                    pefHolder.textViewZoneInfo.setVisibility(View.GONE);
+                    pefHolder.textViewZonePercentage.setVisibility(View.GONE);
+                }
+                
                 if (reading.isPreMed()) {
                     pefHolder.textViewPreMed.setVisibility(View.VISIBLE);
                 } else {
@@ -281,12 +454,21 @@ public class PEFHistoryActivity extends AppCompatActivity {
                 } else {
                     pefHolder.textViewNotes.setVisibility(View.GONE);
                 }
+                
+                pefHolder.buttonDelete.setOnClickListener(v -> {
+                    activity.deleteHistoryItem(item, position);
+                });
             } else if (holder instanceof ZoneChangeViewHolder) {
                 ZoneChangeViewHolder zoneHolder = (ZoneChangeViewHolder) holder;
                 ZoneChangeEvent event = item.getZoneChange();
                 zoneHolder.textViewDate.setText(sdf.format(new Date(event.getTimestamp())));
                 
-                String zoneChangeText = event.getPreviousZone().getDisplayName() + " → " + event.getNewZone().getDisplayName();
+                String zoneChangeText;
+                if (event.getPreviousZone() == event.getNewZone()) {
+                    zoneChangeText = "Remains in " + event.getNewZone().getDisplayName();
+                } else {
+                    zoneChangeText = event.getPreviousZone().getDisplayName() + " → " + event.getNewZone().getDisplayName();
+                }
                 zoneHolder.textViewZoneChange.setText(zoneChangeText);
                 zoneHolder.textViewZoneChange.setTextColor(event.getNewZone().getColorResource());
                 
@@ -299,6 +481,10 @@ public class PEFHistoryActivity extends AppCompatActivity {
                 } else {
                     zoneHolder.textViewPEFValue.setVisibility(View.GONE);
                 }
+                
+                zoneHolder.buttonDelete.setOnClickListener(v -> {
+                    activity.deleteHistoryItem(item, position);
+                });
             }
         }
 
@@ -310,17 +496,23 @@ public class PEFHistoryActivity extends AppCompatActivity {
         static class PEFViewHolder extends RecyclerView.ViewHolder {
             TextView textViewDate;
             TextView textViewPEFValue;
+            TextView textViewZoneInfo;
+            TextView textViewZonePercentage;
             TextView textViewPreMed;
             TextView textViewPostMed;
             TextView textViewNotes;
+            Button buttonDelete;
 
             PEFViewHolder(View itemView) {
                 super(itemView);
                 textViewDate = itemView.findViewById(R.id.textViewDate);
                 textViewPEFValue = itemView.findViewById(R.id.textViewPEFValue);
+                textViewZoneInfo = itemView.findViewById(R.id.textViewZoneInfo);
+                textViewZonePercentage = itemView.findViewById(R.id.textViewZonePercentage);
                 textViewPreMed = itemView.findViewById(R.id.textViewPreMed);
                 textViewPostMed = itemView.findViewById(R.id.textViewPostMed);
                 textViewNotes = itemView.findViewById(R.id.textViewNotes);
+                buttonDelete = itemView.findViewById(R.id.buttonDelete);
             }
         }
 
@@ -329,6 +521,7 @@ public class PEFHistoryActivity extends AppCompatActivity {
             TextView textViewZoneChange;
             TextView textViewZoneDetails;
             TextView textViewPEFValue;
+            Button buttonDelete;
 
             ZoneChangeViewHolder(View itemView) {
                 super(itemView);
@@ -336,6 +529,7 @@ public class PEFHistoryActivity extends AppCompatActivity {
                 textViewZoneChange = itemView.findViewById(R.id.textViewZoneChange);
                 textViewZoneDetails = itemView.findViewById(R.id.textViewZoneDetails);
                 textViewPEFValue = itemView.findViewById(R.id.textViewPEFValue);
+                buttonDelete = itemView.findViewById(R.id.buttonDelete);
             }
         }
     }
