@@ -17,7 +17,11 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.myapplication.R;
 import com.example.myapplication.UserManager;
 import com.example.myapplication.userdata.ChildAccount;
+import com.example.myapplication.safety.Zone;
+import com.example.myapplication.safety.ZoneCalculator;
+import com.example.myapplication.safety.ZoneChangeEvent;
 import com.google.firebase.database.DatabaseReference;
+import android.content.Intent;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,7 +37,8 @@ public class PEFEntryActivity extends AppCompatActivity {
     private Button buttonSave;
     private Button buttonCancel;
     
-    private ChildAccount childAccount;
+    private String childId;
+    private String parentId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,13 +51,19 @@ public class PEFEntryActivity extends AppCompatActivity {
             return insets;
         });
 
-        if (!(UserManager.currentUser instanceof ChildAccount)) {
-            Log.e(TAG, "Current user is not a ChildAccount");
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("childId") && intent.hasExtra("parentId")) {
+            childId = intent.getStringExtra("childId");
+            parentId = intent.getStringExtra("parentId");
+        } else if (UserManager.currentUser instanceof ChildAccount) {
+            ChildAccount childAccount = (ChildAccount) UserManager.currentUser;
+            childId = childAccount.getID();
+            parentId = childAccount.getParent_id();
+        } else {
+            Log.e(TAG, "No childId/parentId provided and current user is not a ChildAccount");
             finish();
             return;
         }
-
-        childAccount = (ChildAccount) UserManager.currentUser;
 
         editTextPEF = findViewById(R.id.editTextPEF);
         checkBoxPreMed = findViewById(R.id.checkBoxPreMed);
@@ -104,8 +115,6 @@ public class PEFEntryActivity extends AppCompatActivity {
 
         PEFReading reading = new PEFReading(pefValue, timestamp, preMed, postMed, notes);
 
-        String parentId = childAccount.getParent_id();
-        String childId = childAccount.getID();
         DatabaseReference pefRef = UserManager.mDatabase
                 .child("users")
                 .child(parentId)
@@ -131,42 +140,61 @@ public class PEFEntryActivity extends AppCompatActivity {
     }
 
     private void checkAndLogZoneChange(int pefValue) {
-        Integer personalBest = childAccount.getPersonalBest();
-        if (personalBest == null || personalBest <= 0) {
-            return;
-        }
-
-        Zone newZone = ZoneCalculator.calculateZone(pefValue, personalBest);
-        double percentage = ZoneCalculator.calculatePercentage(pefValue, personalBest);
-
-        DatabaseReference historyRef = UserManager.mDatabase
+        DatabaseReference childRef = UserManager.mDatabase
                 .child("users")
-                .child(childAccount.getParent_id())
+                .child(parentId)
                 .child("children")
-                .child(childAccount.getID())
-                .child("history");
+                .child(childId);
+        
+        childRef.child("personalBest").get().addOnCompleteListener(task -> {
+            if (!task.isSuccessful() || task.getResult().getValue() == null) {
+                return;
+            }
+            
+            Integer personalBest = null;
+            Object pbValue = task.getResult().getValue();
+            if (pbValue instanceof Long) {
+                personalBest = ((Long) pbValue).intValue();
+            } else if (pbValue instanceof Integer) {
+                personalBest = (Integer) pbValue;
+            }
+            
+            if (personalBest == null || personalBest <= 0) {
+                return;
+            }
 
-        historyRef.orderByKey().limitToLast(1).get().addOnCompleteListener(task -> {
-            Zone previousZone = Zone.UNKNOWN;
-            if (task.isSuccessful() && task.getResult().hasChildren()) {
-                for (com.google.firebase.database.DataSnapshot snapshot : task.getResult().getChildren()) {
-                    ZoneChangeEvent event = snapshot.getValue(ZoneChangeEvent.class);
-                    if (event != null && event.getNewZone() != null) {
-                        previousZone = event.getNewZone();
+            Zone newZone = ZoneCalculator.calculateZone(pefValue, personalBest);
+            double percentage = ZoneCalculator.calculatePercentage(pefValue, personalBest);
+
+            DatabaseReference historyRef = UserManager.mDatabase
+                    .child("users")
+                    .child(parentId)
+                    .child("children")
+                    .child(childId)
+                    .child("history");
+
+            historyRef.orderByKey().limitToLast(1).get().addOnCompleteListener(historyTask -> {
+                Zone previousZone = Zone.UNKNOWN;
+                if (historyTask.isSuccessful() && historyTask.getResult().hasChildren()) {
+                    for (com.google.firebase.database.DataSnapshot snapshot : historyTask.getResult().getChildren()) {
+                        ZoneChangeEvent event = snapshot.getValue(ZoneChangeEvent.class);
+                        if (event != null && event.getNewZone() != null) {
+                            previousZone = event.getNewZone();
+                        }
                     }
                 }
-            }
 
-            if (previousZone != newZone) {
-                ZoneChangeEvent zoneChange = new ZoneChangeEvent(
-                        System.currentTimeMillis(),
-                        previousZone,
-                        newZone,
-                        pefValue,
-                        percentage
-                );
-                historyRef.child(String.valueOf(zoneChange.getTimestamp())).setValue(zoneChange);
-            }
+                if (previousZone != newZone) {
+                    ZoneChangeEvent zoneChange = new ZoneChangeEvent(
+                            System.currentTimeMillis(),
+                            previousZone,
+                            newZone,
+                            pefValue,
+                            percentage
+                    );
+                    historyRef.child(String.valueOf(zoneChange.getTimestamp())).setValue(zoneChange);
+                }
+            });
         });
     }
 }

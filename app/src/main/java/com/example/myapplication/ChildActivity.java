@@ -91,6 +91,8 @@ public class ChildActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ChildActivity.this, PEFEntryActivity.class);
+                intent.putExtra("childId", childAccount.getID());
+                intent.putExtra("parentId", childAccount.getParent_id());
                 pefEntryLauncher.launch(intent);
             }
         });
@@ -99,6 +101,8 @@ public class ChildActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ChildActivity.this, PEFHistoryActivity.class);
+                intent.putExtra("childId", childAccount.getID());
+                intent.putExtra("parentId", childAccount.getParent_id());
                 startActivity(intent);
             }
         });
@@ -107,6 +111,8 @@ public class ChildActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ChildActivity.this, TriageActivity.class);
+                intent.putExtra("childId", childAccount.getID());
+                intent.putExtra("parentId", childAccount.getParent_id());
                 startActivity(intent);
             }
         });

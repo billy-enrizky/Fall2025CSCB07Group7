@@ -1,5 +1,6 @@
 package com.example.myapplication.safety;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.myapplication.R;
 import com.example.myapplication.UserManager;
 import com.example.myapplication.userdata.ChildAccount;
+import com.example.myapplication.userdata.ParentAccount;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -51,16 +53,27 @@ public class PEFHistoryActivity extends AppCompatActivity {
             return insets;
         });
 
-        if (!(UserManager.currentUser instanceof ChildAccount)) {
-            Log.e(TAG, "Current user is not a ChildAccount");
+        String childId;
+        String parentId;
+        
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("childId") && intent.hasExtra("parentId")) {
+            childId = intent.getStringExtra("childId");
+            parentId = intent.getStringExtra("parentId");
+        } else if (UserManager.currentUser instanceof ChildAccount) {
+            ChildAccount childAccount = (ChildAccount) UserManager.currentUser;
+            childId = childAccount.getID();
+            parentId = childAccount.getParent_id();
+        } else {
+            Log.e(TAG, "No childId/parentId provided and current user is not a ChildAccount");
             finish();
             return;
         }
-
-        ChildAccount childAccount = (ChildAccount) UserManager.currentUser;
+        
         recyclerViewPEF = findViewById(R.id.recyclerViewPEF);
         textViewEmpty = findViewById(R.id.textViewEmpty);
         Button buttonBack = findViewById(R.id.buttonBack);
+        Button buttonEnterPEF = findViewById(R.id.buttonEnterPEF);
         
         buttonBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -69,17 +82,25 @@ public class PEFHistoryActivity extends AppCompatActivity {
             }
         });
         
+        buttonEnterPEF.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(PEFHistoryActivity.this, PEFEntryActivity.class);
+                intent.putExtra("childId", childId);
+                intent.putExtra("parentId", parentId);
+                startActivity(intent);
+            }
+        });
+        
         pefReadings = new ArrayList<>();
         adapter = new PEFHistoryAdapter(pefReadings);
         recyclerViewPEF.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewPEF.setAdapter(adapter);
 
-        loadPEFHistory(childAccount);
+        loadPEFHistory(parentId, childId);
     }
 
-    private void loadPEFHistory(ChildAccount childAccount) {
-        String parentId = childAccount.getParent_id();
-        String childId = childAccount.getID();
+    private void loadPEFHistory(String parentId, String childId) {
 
         DatabaseReference pefRef = UserManager.mDatabase
                 .child("users")
