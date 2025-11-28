@@ -17,6 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.myapplication.safety.PEFHistoryActivity;
 import com.example.myapplication.safety.PEFReading;
 import com.example.myapplication.safety.SetPersonalBestActivity;
 import com.example.myapplication.safety.Zone;
@@ -309,10 +310,18 @@ public class ParentActivity extends AppCompatActivity {
             }
             
             holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(ParentActivity.this, PEFHistoryActivity.class);
+                intent.putExtra("childId", info.child.getID());
+                intent.putExtra("parentId", info.child.getParent_id());
+                startActivity(intent);
+            });
+            
+            holder.itemView.setOnLongClickListener(v -> {
                 Intent intent = new Intent(ParentActivity.this, SetPersonalBestActivity.class);
                 intent.putExtra("childId", info.child.getID());
                 intent.putExtra("parentId", info.child.getParent_id());
                 startActivity(intent);
+                return true;
             });
         }
 

@@ -60,13 +60,54 @@ public class TriageActivity extends AppCompatActivity {
             return insets;
         });
 
-        if (!(UserManager.currentUser instanceof ChildAccount)) {
-            Log.e(TAG, "Current user is not a ChildAccount");
+        String childId;
+        String parentId;
+        
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("childId") && intent.hasExtra("parentId")) {
+            childId = intent.getStringExtra("childId");
+            parentId = intent.getStringExtra("parentId");
+            
+            DatabaseReference childRef = UserManager.mDatabase
+                    .child("users")
+                    .child(parentId)
+                    .child("children")
+                    .child(childId);
+            
+            childRef.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful() && task.getResult().getValue() != null) {
+                    childAccount = task.getResult().getValue(ChildAccount.class);
+                    if (childAccount != null) {
+                        initializeTriage();
+                    } else {
+                        Log.e(TAG, "Failed to load child account");
+                        finish();
+                    }
+                } else {
+                    Log.e(TAG, "Failed to load child account", task.getException());
+                    finish();
+                }
+            });
+            return;
+        } else if (UserManager.currentUser instanceof ChildAccount) {
+            childAccount = (ChildAccount) UserManager.currentUser;
+            childId = childAccount.getID();
+            parentId = childAccount.getParent_id();
+        } else {
+            Log.e(TAG, "No childId/parentId provided and current user is not a ChildAccount");
             finish();
             return;
         }
-
-        childAccount = (ChildAccount) UserManager.currentUser;
+        
+        initializeTriage();
+    }
+    
+    private void initializeTriage() {
+        if (childAccount == null) {
+            Log.e(TAG, "ChildAccount is null");
+            finish();
+            return;
+        }
         session = new TriageSession();
         currentStep = STEP_RED_FLAGS;
         redFlags = new HashMap<>();
