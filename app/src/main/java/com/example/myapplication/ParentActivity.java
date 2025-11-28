@@ -310,14 +310,14 @@ public class ParentActivity extends AppCompatActivity {
             }
             
             holder.itemView.setOnClickListener(v -> {
-                Intent intent = new Intent(ParentActivity.this, PEFHistoryActivity.class);
+                Intent intent = new Intent(ParentActivity.this, SetPersonalBestActivity.class);
                 intent.putExtra("childId", info.child.getID());
                 intent.putExtra("parentId", info.child.getParent_id());
                 startActivity(intent);
             });
             
             holder.itemView.setOnLongClickListener(v -> {
-                Intent intent = new Intent(ParentActivity.this, SetPersonalBestActivity.class);
+                Intent intent = new Intent(ParentActivity.this, PEFHistoryActivity.class);
                 intent.putExtra("childId", info.child.getID());
                 intent.putExtra("parentId", info.child.getParent_id());
                 startActivity(intent);
