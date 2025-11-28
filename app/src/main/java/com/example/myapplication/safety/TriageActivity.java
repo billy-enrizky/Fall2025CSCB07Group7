@@ -1,6 +1,7 @@
 package com.example.myapplication.safety;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -109,30 +110,24 @@ public class TriageActivity extends AppCompatActivity {
         Button buttonNext = currentStepView.findViewById(R.id.buttonNextRedFlags);
         
         buttonYes1.setOnClickListener(v -> {
-            redFlags.put("speak", true);
-            buttonNext.setVisibility(View.VISIBLE);
+            toggleRedFlagChoice("speak", true, buttonYes1, buttonNo1, buttonNext);
         });
         buttonNo1.setOnClickListener(v -> {
-            redFlags.put("speak", false);
-            checkAllRedFlagsAnswered(buttonNext);
+            toggleRedFlagChoice("speak", false, buttonYes1, buttonNo1, buttonNext);
         });
         
         buttonYes2.setOnClickListener(v -> {
-            redFlags.put("chest", true);
-            buttonNext.setVisibility(View.VISIBLE);
+            toggleRedFlagChoice("chest", true, buttonYes2, buttonNo2, buttonNext);
         });
         buttonNo2.setOnClickListener(v -> {
-            redFlags.put("chest", false);
-            checkAllRedFlagsAnswered(buttonNext);
+            toggleRedFlagChoice("chest", false, buttonYes2, buttonNo2, buttonNext);
         });
         
         buttonYes3.setOnClickListener(v -> {
-            redFlags.put("lips", true);
-            buttonNext.setVisibility(View.VISIBLE);
+            toggleRedFlagChoice("lips", true, buttonYes3, buttonNo3, buttonNext);
         });
         buttonNo3.setOnClickListener(v -> {
-            redFlags.put("lips", false);
-            checkAllRedFlagsAnswered(buttonNext);
+            toggleRedFlagChoice("lips", false, buttonYes3, buttonNo3, buttonNext);
         });
         
         buttonNext.setOnClickListener(v -> {
@@ -141,9 +136,37 @@ public class TriageActivity extends AppCompatActivity {
         });
     }
 
+    private void toggleRedFlagChoice(String flagKey, boolean isYes, Button buttonYes, Button buttonNo, Button buttonNext) {
+        Boolean currentValue = redFlags.get(flagKey);
+        
+        if (currentValue != null && currentValue == isYes) {
+            redFlags.remove(flagKey);
+            resetButtonPair(buttonYes, buttonNo);
+        } else {
+            redFlags.put(flagKey, isYes);
+            if (isYes) {
+                highlightButton(buttonYes, buttonNo, true);
+            } else {
+                highlightButton(buttonNo, buttonYes, false);
+            }
+        }
+        
+        checkAllRedFlagsAnswered(buttonNext);
+    }
+    
+    private void resetButtonPair(Button buttonYes, Button buttonNo) {
+        int defaultColor = 0xFF6200EE;
+        buttonYes.setBackgroundTintList(ColorStateList.valueOf(defaultColor));
+        buttonYes.setTextColor(0xFFFFFFFF);
+        buttonNo.setBackgroundTintList(ColorStateList.valueOf(defaultColor));
+        buttonNo.setTextColor(0xFFFFFFFF);
+    }
+    
     private void checkAllRedFlagsAnswered(Button buttonNext) {
         if (redFlags.size() == 3) {
             buttonNext.setVisibility(View.VISIBLE);
+        } else {
+            buttonNext.setVisibility(View.GONE);
         }
     }
 
@@ -161,38 +184,56 @@ public class TriageActivity extends AppCompatActivity {
         Button buttonNext = currentStepView.findViewById(R.id.buttonNextRescue);
         
         buttonYes.setOnClickListener(v -> {
-            rescueAttempts = true;
-            textViewCountLabel.setVisibility(View.VISIBLE);
-            editTextCount.setVisibility(View.VISIBLE);
-            buttonNext.setVisibility(View.VISIBLE);
+            if (rescueAttempts) {
+                rescueAttempts = false;
+                resetButtonPair(buttonYes, buttonNo);
+                textViewCountLabel.setVisibility(View.GONE);
+                editTextCount.setVisibility(View.GONE);
+                editTextCount.setText("");
+                buttonNext.setVisibility(View.GONE);
+                rescueCount = 0;
+            } else {
+                rescueAttempts = true;
+                highlightButton(buttonYes, buttonNo, true);
+                textViewCountLabel.setVisibility(View.VISIBLE);
+                editTextCount.setVisibility(View.VISIBLE);
+                buttonNext.setVisibility(View.VISIBLE);
+            }
         });
         
         buttonNo.setOnClickListener(v -> {
             rescueAttempts = false;
+            highlightButton(buttonNo, buttonYes, false);
             rescueCount = 0;
-            session.setRescueAttempts(false);
-            session.setRescueCount(0);
-            showPEFStep();
+            textViewCountLabel.setVisibility(View.GONE);
+            editTextCount.setVisibility(View.GONE);
+            editTextCount.setText("");
+            buttonNext.setVisibility(View.VISIBLE);
         });
         
         buttonNext.setOnClickListener(v -> {
-            String countText = editTextCount.getText().toString().trim();
-            if (countText.isEmpty()) {
-                Toast.makeText(this, "Please enter rescue count", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            try {
-                rescueCount = Integer.parseInt(countText);
-                if (rescueCount < 1 || rescueCount > 10) {
-                    Toast.makeText(this, "Please enter a number between 1 and 10", Toast.LENGTH_SHORT).show();
+            if (rescueAttempts) {
+                String countText = editTextCount.getText().toString().trim();
+                if (countText.isEmpty()) {
+                    Toast.makeText(this, "Please enter rescue count", Toast.LENGTH_SHORT).show();
                     return;
                 }
-            } catch (NumberFormatException e) {
-                Toast.makeText(this, "Please enter a valid number", Toast.LENGTH_SHORT).show();
-                return;
+                try {
+                    rescueCount = Integer.parseInt(countText);
+                    if (rescueCount < 1 || rescueCount > 10) {
+                        Toast.makeText(this, "Please enter a number between 1 and 10", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    Toast.makeText(this, "Please enter a valid number", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                session.setRescueAttempts(true);
+                session.setRescueCount(rescueCount);
+            } else {
+                session.setRescueAttempts(false);
+                session.setRescueCount(0);
             }
-            session.setRescueAttempts(true);
-            session.setRescueCount(rescueCount);
             showPEFStep();
         });
     }
@@ -527,6 +568,17 @@ public class TriageActivity extends AppCompatActivity {
             session.setEscalated(true);
             sendTriageEscalationNotification();
         }
+    }
+    
+    private void highlightButton(Button selectedButton, Button otherButton, boolean isYes) {
+        int selectedColor = 0xFFFFEB3B;
+        int defaultColor = 0xFF6200EE;
+        
+        selectedButton.setBackgroundTintList(ColorStateList.valueOf(selectedColor));
+        selectedButton.setTextColor(0xFF000000);
+        
+        otherButton.setBackgroundTintList(ColorStateList.valueOf(defaultColor));
+        otherButton.setTextColor(0xFFFFFFFF);
     }
 }
 
