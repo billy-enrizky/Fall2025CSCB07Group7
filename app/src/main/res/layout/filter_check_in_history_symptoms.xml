@@ -3,46 +3,46 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#E8D65D">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/daily_checkin_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="55dp"
-        android:layout_marginTop="104dp"
-        android:layout_marginEnd="55dp"
-        android:text="Daily Check-in"
-        android:textSize="48sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <CheckBox
-        android:id="@+id/night_waking"
-        android:layout_width="362dp"
-        android:layout_height="106dp"
-        android:layout_marginStart="27dp"
-        android:layout_marginTop="1dp"
-        android:layout_marginEnd="22dp"
-        android:text="Woke up last night due to coughing/wheezing"
-        android:textSize="28sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/daily_checkin_title" />
 
     <com.google.android.material.chip.ChipGroup
-        android:id="@+id/activity_limits"
+        android:id="@+id/night_waking_filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="3dp"
+        android:layout_marginEnd="140dp"
+        app:chipSpacingHorizontal="50dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/night_waking_filter_title"
+        app:singleSelection="true">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/yes_chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checkable="true"
+            android:text="Symptoms caused night waking" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/no_chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checkable="true"
+            android:text="Symptoms did not cause night waking" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/activity_limits_filter"
         android:layout_width="385dp"
-        android:layout_height="169dp"
-        android:layout_marginStart="11dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="22dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="23dp"
         app:chipSpacingHorizontal="100dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.176"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/activity_limits_filter_title"
         app:singleSelection="true">
@@ -75,69 +75,69 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="27dp"
-        android:layout_marginTop="36dp"
+        android:layout_marginTop="248dp"
         android:layout_marginEnd="148dp"
-        android:text="Choose the most accurate option"
+        android:text="Filter by Activity Level"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/night_waking" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/night_waking_filter_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="27dp"
+        android:layout_marginTop="80dp"
+        android:layout_marginEnd="148dp"
+        android:text="Filter by Night Waking"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.slider.Slider
         android:id="@+id/cough_wheeze_slider_filter"
         android:layout_width="336dp"
         android:layout_height="57dp"
         android:layout_marginStart="37dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="1dp"
         android:layout_marginEnd="38dp"
+        android:stepSize="1.0"
         android:valueFrom="0.0"
         android:valueTo="10.0"
-        android:stepSize="1.0"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cough_wheeze_title" />
+        app:layout_constraintTop_toBottomOf="@+id/cough_wheeze_filter_check" />
 
     <TextView
-        android:id="@+id/cough_wheeze_title"
-        android:layout_width="251dp"
-        android:layout_height="31dp"
-        android:layout_marginStart="44dp"
-        android:layout_marginTop="48dp"
-        android:layout_marginEnd="116dp"
-        android:text="Level of Coughing/Wheezing"
-        android:textSize="18sp"
+        android:id="@+id/select_triggers_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="105dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="83dp"
+        android:text="Filter by Triggers"
+        android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activity_limits" />
-
-    <Button
-        android:id="@+id/log_checkin"
-        android:layout_width="187dp"
-        android:layout_height="69dp"
-        android:layout_marginStart="100dp"
-        android:layout_marginTop="29dp"
-        android:layout_marginEnd="124dp"
-        android:onClick="runCheckIn"
-        android:text="Log"
-        android:textSize="40sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/triggers" />
+        app:layout_constraintTop_toBottomOf="@+id/cough_wheeze_slider_filter" />
 
     <com.google.android.material.chip.ChipGroup
-        android:id="@+id/triggers"
+        android:id="@+id/triggers_filter"
         android:layout_width="391dp"
         android:layout_height="111dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="27dp"
-        android:layout_marginEnd="4dp"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="17dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cough_wheeze_slider_filter">
+        app:layout_constraintTop_toBottomOf="@+id/select_triggers_title">
 
         <com.google.android.material.chip.Chip
             android:id="@+id/exercise_chip"
@@ -184,17 +184,41 @@
     </com.google.android.material.chip.ChipGroup>
 
     <Button
-        android:id="@+id/leaveCheckIn"
+        android:id="@+id/view_history_browser"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="13dp"
-        android:layout_marginTop="23dp"
-        android:layout_marginEnd="310dp"
-        android:onClick="goBack"
+        android:layout_marginStart="120dp"
+        android:layout_marginTop="31dp"
+        android:layout_marginEnd="163dp"
+        android:onClick="viewHistoryButton"
+        android:text="View History"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/triggers_filter" />
+
+    <Button
+        android:id="@+id/go_to_filter_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="301dp"
+        android:onClick="goBackToDateButton"
         android:text="Back"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <CheckBox
+        android:id="@+id/cough_wheeze_filter_check"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Filter by Cough/Wheeze Level"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.144"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/activity_limits_filter" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

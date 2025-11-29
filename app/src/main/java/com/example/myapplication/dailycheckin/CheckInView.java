@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapplication.ChildActivity;
 import com.example.myapplication.R;
-import com.example.myapplication.ResetPasswordActivity;
 import com.example.myapplication.UserManager;
 import com.example.myapplication.childmanaging.SignInChildProfileActivity;
 import com.example.myapplication.userdata.AccountType;
@@ -35,7 +34,7 @@ public class CheckInView extends AppCompatActivity {
         setContentView(R.layout.activity_daily_checkin);
         nightWakingCheck = (CheckBox) findViewById(R.id.night_waking);
         activityLimitsChips = (ChipGroup) findViewById(R.id.activity_limits);
-        coughWheezeLevelSlider = (Slider) findViewById(R.id.cough_wheeze_slider);
+        coughWheezeLevelSlider = (Slider) findViewById(R.id.cough_wheeze_slider_filter);
         triggersChips = (ChipGroup) findViewById(R.id.triggers);
         if (UserManager.currentUser.getAccount().equals(AccountType.CHILD)) {
             this.username = ((ChildAccount)UserManager.currentUser).getID();

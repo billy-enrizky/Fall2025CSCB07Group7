@@ -88,4 +88,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/go_to_filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="88dp"
+        android:layout_marginTop="25dp"
+        android:layout_marginEnd="33dp"
+        android:onClick="goToFilterByDate"
+        android:text="Filter History"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/button20"
+        app:layout_constraintTop_toBottomOf="@+id/CheckInFragmentContainerParent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
