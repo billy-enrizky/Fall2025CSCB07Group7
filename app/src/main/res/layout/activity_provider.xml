@@ -33,9 +33,11 @@
         android:id="@+id/button22"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="34dp"
         android:onClick="AccessInfo"
         android:text="Access Info"
-        tools:layout_editor_absoluteX="52dp"
-        tools:layout_editor_absoluteY="198dp" />
+        app:layout_constraintStart_toStartOf="@+id/button16"
+        app:layout_constraintTop_toBottomOf="@+id/button16" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

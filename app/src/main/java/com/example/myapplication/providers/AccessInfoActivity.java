@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -68,6 +69,9 @@ public class AccessInfoActivity extends AppCompatActivity {
         currentUser = (ProviderAccount) UserManager.currentUser;
         LinkedParentsId = currentUser.getLinkedParentsId();
         LinkedChildren = new ArrayList<>();
+        initialization();
+    }
+    public void initialization(){
         textView = new TextView(this);
         textView.setText("Current Child: null" + "\nClick name to switch");
         textView.setTextSize(20);
@@ -85,12 +89,19 @@ public class AccessInfoActivity extends AppCompatActivity {
                     }
                 }
             });
-            AccessInfoModel.addListener();
+            AccessInfoModel.addListener(LinkedParentsId.get(i), new CallBack(){
+                @Override
+                public void onComplete() {
+                    Toast.makeText(AccessInfoActivity.this, "Access Info Updated", Toast.LENGTH_SHORT).show();
+                    AccessInfoModel.removeAllListeners();
+                    container.removeAllViews();
+                }
+            });
         }
     }
 
     public void addChildToUI(ChildAccount child){
-        Permission currentPermission = currentChild.getPermission();
+        Permission currentPermission = child.getPermission();
         if(!currentPermission.getControllerAdherenceSummary()&&
                 !currentPermission.getRescueLogs()&&
                 !currentPermission.getSummaryCharts()&&
@@ -106,7 +117,7 @@ public class AccessInfoActivity extends AppCompatActivity {
         tv.setPadding(40,30,40,30);
         tv.setOnClickListener(v -> {
             currentChild = child;
-            textView.setText("Current Child: " + currentChild.getName() +   "\nClick name to switch");
+            textView.setText("Current Child: " + child.getName() +   "\nClick name to switch");
             SetButtonVisibility();
         });
         container.addView(tv);
