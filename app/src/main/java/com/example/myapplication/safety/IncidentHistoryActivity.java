@@ -1,6 +1,7 @@
 package com.example.myapplication.safety;
 
 import android.os.Bundle;
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,6 +40,8 @@ public class IncidentHistoryActivity extends AppCompatActivity {
     private TextView textViewEmpty;
     private IncidentAdapter adapter;
     private List<TriageIncident> incidents;
+    private String parentId;
+    private String childId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,27 +54,33 @@ public class IncidentHistoryActivity extends AppCompatActivity {
             return insets;
         });
 
-        if (!(UserManager.currentUser instanceof ChildAccount)) {
-            Log.e(TAG, "Current user is not a ChildAccount");
+        // Determine which child to show incidents for
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("childId") && intent.hasExtra("parentId")) {
+            childId = intent.getStringExtra("childId");
+            parentId = intent.getStringExtra("parentId");
+        } else if (UserManager.currentUser instanceof ChildAccount) {
+            ChildAccount childAccount = (ChildAccount) UserManager.currentUser;
+            childId = childAccount.getID();
+            parentId = childAccount.getParent_id();
+        } else {
+            Log.e(TAG, "No childId/parentId provided and current user is not a ChildAccount");
             finish();
             return;
         }
-
-        ChildAccount childAccount = (ChildAccount) UserManager.currentUser;
         recyclerViewIncidents = findViewById(R.id.recyclerViewIncidents);
         textViewEmpty = findViewById(R.id.textViewEmpty);
+        android.widget.Button buttonBack = findViewById(R.id.buttonBack);
+        buttonBack.setOnClickListener(v -> finish());
         incidents = new ArrayList<>();
         adapter = new IncidentAdapter(incidents);
         recyclerViewIncidents.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewIncidents.setAdapter(adapter);
 
-        loadIncidents(childAccount);
+        loadIncidents(parentId, childId);
     }
 
-    private void loadIncidents(ChildAccount childAccount) {
-        String parentId = childAccount.getParent_id();
-        String childId = childAccount.getID();
-
+    private void loadIncidents(String parentId, String childId) {
         DatabaseReference incidentRef = UserManager.mDatabase
                 .child("users")
                 .child(parentId)

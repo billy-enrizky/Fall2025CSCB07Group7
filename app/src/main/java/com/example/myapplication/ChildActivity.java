@@ -24,6 +24,7 @@ import com.example.myapplication.safety.PEFReading;
 import com.example.myapplication.safety.TriageActivity;
 import com.example.myapplication.safety.Zone;
 import com.example.myapplication.safety.ZoneCalculator;
+import com.example.myapplication.safety.IncidentHistoryActivity;
 import com.example.myapplication.userdata.ChildAccount;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -44,6 +45,7 @@ public class ChildActivity extends AppCompatActivity {
     private CardView cardViewZone;
     private Button buttonEnterPEF;
     private Button buttonViewPEFHistory;
+    private Button buttonIncidentHistory;
     private Button buttonTriage;
     
     private ChildAccount childAccount;
@@ -74,6 +76,7 @@ public class ChildActivity extends AppCompatActivity {
         cardViewZone = findViewById(R.id.cardViewZone);
         buttonEnterPEF = findViewById(R.id.buttonEnterPEF);
         buttonViewPEFHistory = findViewById(R.id.buttonViewPEFHistory);
+        buttonIncidentHistory = findViewById(R.id.buttonIncidentHistory);
         buttonTriage = findViewById(R.id.buttonTriage);
 
         pefEntryLauncher = registerForActivityResult(
@@ -101,6 +104,18 @@ public class ChildActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ChildActivity.this, PEFHistoryActivity.class);
+                intent.putExtra("childId", childAccount.getID());
+                intent.putExtra("parentId", childAccount.getParent_id());
+                startActivity(intent);
+            }
+        });
+
+        buttonIncidentHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(ChildActivity.this, IncidentHistoryActivity.class);
+                // IncidentHistoryActivity currently uses UserManager.currentUser as ChildAccount,
+                // so no extras are strictly required, but this keeps it consistent if extended later.
                 intent.putExtra("childId", childAccount.getID());
                 intent.putExtra("parentId", childAccount.getParent_id());
                 startActivity(intent);
