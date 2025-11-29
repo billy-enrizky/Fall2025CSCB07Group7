@@ -19,8 +19,10 @@ import com.example.myapplication.ParentActivity;
 import com.example.myapplication.R;
 import com.example.myapplication.SignIn.SignInView;
 import com.example.myapplication.UserManager;
+import com.example.myapplication.dailycheckin.CheckInHistoryFilters;
 import com.example.myapplication.dailycheckin.CheckInPresenter;
 import com.example.myapplication.dailycheckin.CheckInView;
+import com.example.myapplication.dailycheckin.FilterCheckInByDate;
 import com.example.myapplication.userdata.ChildAccount;
 import com.example.myapplication.userdata.ParentAccount;
 
@@ -65,6 +67,9 @@ public class SignInChildProfileActivity extends AppCompatActivity {
     public static String getCurrentChildUsername() {
         return currentChild.getID();
     }
+    public static ChildAccount getCurrentChild() {
+        return currentChild;
+    }
 
     public void addChildToUI(ChildAccount child){
         TextView tv = new TextView(this);
@@ -103,5 +108,15 @@ public class SignInChildProfileActivity extends AppCompatActivity {
         for(ChildAccount child : user.getChildren().values()){
             addChildToUI(child);
         }
+    }
+
+    public void goToFilterByDate(View view) {
+        if(currentChild == null){
+            Toast.makeText(this, "Please select a child", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        CheckInHistoryFilters.getInstance().setUsername(currentChild.getID());
+        Intent intent = new Intent(this, FilterCheckInByDate.class);
+        startActivity(intent);
     }
 }

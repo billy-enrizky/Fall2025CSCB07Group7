@@ -57,7 +57,7 @@ public class CheckInModel {
         });
         <It's incorrect to attach A here, as reading might haven't done>
 */
-    public void readFromDB(String username, ResultCallBack<HashMap<String,DailyCheckin>> callback){
+    public static void readFromDB(String username, ResultCallBack<HashMap<String, DailyCheckin>> callback){
         UserManager.mDatabase.child("CheckInManager").child(username)
             .addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
