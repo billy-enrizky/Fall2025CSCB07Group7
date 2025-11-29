@@ -11,14 +11,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
+
         <activity
             android:name=".ProviderActivity"
             android:exported="false" />
         <activity
             android:name=".ParentActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ChildActivity"
             android:exported="false" />
         <activity
             android:name=".OnBoardingActivity"
@@ -34,17 +32,42 @@
             android:exported="false" />
         <activity
             android:name=".SignInActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".ChildInhalerInstructions"
+            android:exported="true"
+        />
+        <activity
+            android:name=".ChildInhalerMenu"
+            android:exported="true" />
+        <activity
+            android:name=".ChildInhalerLogs"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
         </activity>
-
+        <activity
+            android:name=".ChildInhalerDailyStreak"
+            android:exported="true" />
+        <activity
+            android:name=".ChildInhalerUse"
+            android:exported="true" />
+        <activity
+            android:name=".ChildInhalerUseRescue"
+            android:exported="true" />
+        <activity
+            android:name=".ChildInhalerUseController"
+            android:exported="true" />
+        <activity
+            android:name=".ChildInhalerVideo"
+            android:exported="true" />
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
+
     </application>
 
 </manifest>

@@ -1,0 +1,93 @@
+package com.example.myapplication;
+
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.SeekBar;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.myapplication.userdata.ChildAccount;
+
+public class ChildInhalerUseRescue extends AppCompatActivity {
+    ChildAccount currentUser;
+    RescueLog rescueLog = new RescueLog();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        rescueLog.setFeeling("Better");
+        rescueLog.setRating(1);
+        rescueLog.setUsername(UserManager.currentUser.getID());
+        setContentView(R.layout.activity_inhaler_use_after);
+
+        SeekBar seekBar = findViewById(R.id.seekBar);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                rescueLog.setRating(progress + 1);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        Button happyButton = findViewById(R.id.happybutton);
+        Button neutralButton = findViewById(R.id.neutralbutton);
+        Button sadButton = findViewById(R.id.sadbutton);
+        Button confirmButton = findViewById(R.id.confirmbutton);
+
+        happyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                happyButton.setBackgroundTintList(ColorStateList.valueOf(0xFF94D95F));
+                neutralButton.setBackgroundTintList(ColorStateList.valueOf(0xFFFFD498));
+                sadButton.setBackgroundTintList(ColorStateList.valueOf(0xFFFF7B7B));
+                rescueLog.setFeeling("Better");
+            }
+        });
+
+        neutralButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                happyButton.setBackgroundTintList(ColorStateList.valueOf(0xFFAEFF70));
+                neutralButton.setBackgroundTintList(ColorStateList.valueOf(0xFFD8B481));
+                sadButton.setBackgroundTintList(ColorStateList.valueOf(0xFFFF7B7B));
+                rescueLog.setFeeling("Same");
+            }
+        });
+
+        sadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                happyButton.setBackgroundTintList(ColorStateList.valueOf(0xFFAEFF70));
+                neutralButton.setBackgroundTintList(ColorStateList.valueOf(0xFFFFD498));
+                sadButton.setBackgroundTintList(ColorStateList.valueOf(0xFFD86868));
+                rescueLog.setFeeling("Worse");
+            }
+        });
+
+        findViewById(R.id.backbutton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(ChildInhalerUseRescue.this, ChildInhalerUse.class));
+            }
+        });
+
+        confirmButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RescueLogModel.writeIntoDB(rescueLog, new CallBack() {
+                    @Override
+                    public void onComplete() {
+                        startActivity(new Intent(ChildInhalerUseRescue.this, ChildInhalerMenu.class));
+                    }
+                });
+            }
+        });
+    }
+}
