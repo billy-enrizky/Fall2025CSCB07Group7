@@ -14,11 +14,20 @@ public class ChildInhalerMenu extends AppCompatActivity {
             Button button13 = findViewById(R.id.button13);
             Button button6 = findViewById(R.id.button6);
             Button button10 = findViewById(R.id.button10);
+            Button button11 = findViewById(R.id.button11);
 
             button13.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(ChildInhalerMenu.this, ChildInhalerInstructions.class);
+                    startActivity(intent);
+                }
+            });
+
+            button11.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(ChildInhalerMenu.this, ChildInhalerLogs.class);
                     startActivity(intent);
                 }
             });

@@ -1,4 +1,6 @@
 package com.example.myapplication;
 
-public class ChildInhalerDailyStreak {
+import androidx.appcompat.app.AppCompatActivity;
+
+public class ChildInhalerDailyStreak extends AppCompatActivity {
 }
