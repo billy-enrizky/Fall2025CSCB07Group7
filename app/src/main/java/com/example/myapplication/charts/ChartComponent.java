@@ -72,9 +72,14 @@ public class ChartComponent {
         }
 
         List<Entry> entries = new ArrayList<>();
+        float minY = Float.MAX_VALUE;
+        float maxY = Float.MIN_VALUE;
         for (int i = 0; i < dataPoints.size(); i++) {
             PEFDataPoint point = dataPoints.get(i);
-            entries.add(new Entry(i, (float) point.getPefValue()));
+            float pefValue = (float) point.getPefValue();
+            entries.add(new Entry(i, pefValue));
+            if (pefValue < minY) minY = pefValue;
+            if (pefValue > maxY) maxY = pefValue;
         }
 
         LineDataSet dataSet = new LineDataSet(entries, label);
@@ -91,6 +96,12 @@ public class ChartComponent {
         XAxis xAxis = chart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setGranularity(1f);
+        xAxis.setYOffset(5f);
+        if (entries.size() > 0) {
+            float xPadding = 0.5f;
+            xAxis.setAxisMinimum(-xPadding);
+            xAxis.setAxisMaximum(entries.size() - 1 + xPadding);
+        }
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
@@ -105,11 +116,36 @@ public class ChartComponent {
         });
 
         YAxis leftAxis = chart.getAxisLeft();
-        leftAxis.setAxisMinimum(0f);
+        float circleRadius = 4f;
+        float yRange = maxY - minY;
+        
+        if (yRange == 0) {
+            yRange = maxY > 0 ? maxY : 100f;
+        }
+        
+        float paddingPercent = 0.15f;
+        float absoluteMinPadding = circleRadius * 2 + 10f;
+        float absoluteMaxPadding = circleRadius * 2 + 10f;
+        
+        float minPadding = Math.max(yRange * paddingPercent, absoluteMinPadding);
+        float maxPadding = Math.max(yRange * paddingPercent, absoluteMaxPadding);
+        
+        float axisMin = Math.max(0f, minY - minPadding);
+        float axisMax = maxY + maxPadding;
+        
+        leftAxis.setAxisMinimum(axisMin);
+        leftAxis.setAxisMaximum(axisMax);
 
         chart.getAxisRight().setEnabled(false);
         chart.getDescription().setEnabled(false);
         chart.getLegend().setEnabled(false);
+        chart.setAutoScaleMinMaxEnabled(false);
+        
+        float sideOffset = 20f;
+        float topOffset = 20f;
+        float bottomOffset = 40f;
+        chart.setExtraOffsets(sideOffset, topOffset, sideOffset, bottomOffset);
+        
         chart.invalidate();
     }
 
