@@ -74,6 +74,12 @@
             android:name=".ChildInhalerVideo"
             android:exported="false" />
         <activity
+            android:name=".ParentInhalerCreate"
+            android:exported="false" />
+        <activity
+            android:name=".ParentInhalerMenu"
+            android:exported="false" />
+        <activity
             android:name=".childmanaging.CreateChildActivity"
             android:exported="false" />
         <activity

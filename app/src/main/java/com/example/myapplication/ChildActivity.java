@@ -79,8 +79,6 @@ public class ChildActivity extends AppCompatActivity {
         buttonIncidentHistory = findViewById(R.id.buttonIncidentHistory);
         buttonTriage = findViewById(R.id.buttonTriage);
 
-        //DeBUG
-        Button buttonDebug = findViewById(R.id.debugButton);
 
         pefEntryLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -136,7 +134,7 @@ public class ChildActivity extends AppCompatActivity {
         });
 
         //DEBUG
-        buttonDebug.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.debugButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ChildActivity.this, ChildInhalerMenu.class);
