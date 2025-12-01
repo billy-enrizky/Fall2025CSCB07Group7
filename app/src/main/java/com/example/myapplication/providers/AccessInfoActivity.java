@@ -20,6 +20,7 @@ import com.example.myapplication.UserManager;
 import com.example.myapplication.dailycheckin.CheckInHistoryFilters;
 import com.example.myapplication.dailycheckin.FilterCheckInByDate;
 import com.example.myapplication.providermanaging.Permission;
+import com.example.myapplication.reports.TrendSnippetActivity;
 import com.example.myapplication.safety.IncidentHistoryActivity;
 import com.example.myapplication.safety.PEFHistoryActivity;
 import com.example.myapplication.userdata.ChildAccount;
@@ -187,6 +188,7 @@ public class AccessInfoActivity extends AppCompatActivity {
         startActivity(intent);
     }
     public void ControllerAdherenceSummary(android.view.View view){
+
     }
     public void Symptoms(android.view.View view){
         CheckInHistoryFilters.getInstance().setUsername(currentChild.getID());
@@ -219,5 +221,20 @@ public class AccessInfoActivity extends AppCompatActivity {
         startActivity(intent);
     }
     public void SummaryCharts(android.view.View view){
+        Intent intent = new Intent(this, TrendSnippetActivity.class);
+        intent.putExtra("childId", currentChild.getID());
+        intent.putExtra("parentId", currentChild.getParent_id());
+        intent.putExtra("childName", currentChild.getName());
+        if(!currentChild.getPermission().getPeakFlow()){
+            intent.putExtra("PEFBanned", currentChild.getName());
+        }
+        if(!currentChild.getPermission().getRescueLogs()){
+            intent.putExtra("RescueLogBanned", currentChild.getName());
+        }
+        if(!currentChild.getPermission().getSymptoms()){
+            intent.putExtra("SymptomsBanned", currentChild.getName());
+        }
+        intent.putExtra("isProvider", "true");
+        startActivity(intent);
     }
 }
