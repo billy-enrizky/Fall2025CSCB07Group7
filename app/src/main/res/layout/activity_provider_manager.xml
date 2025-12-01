@@ -84,28 +84,32 @@
         app:layout_constraintStart_toStartOf="@+id/ChildList2"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
-        android:id="@+id/ChildList2"
+    <TextView
+        android:id="@+id/textView33"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="1dp"
+        android:text="Current Child: null\nClick name to switch"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/button" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewChildren"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="1dp"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="1dp"
         android:layout_marginBottom="49dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="@+id/RL"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/button">
-
-        <TextView
-            android:id="@+id/textView33"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Current Child: \nClick name to switch"
-            android:textSize="20sp" />
-
-    </LinearLayout>
+        app:layout_constraintTop_toBottomOf="@+id/textView33" />
 
     <TextView
         android:id="@+id/textView25"

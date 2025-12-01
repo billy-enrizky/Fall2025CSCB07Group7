@@ -8,13 +8,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myapplication.R;
 import com.example.myapplication.UserManager;
@@ -24,11 +26,14 @@ import com.example.myapplication.userdata.ChildAccount;
 import com.example.myapplication.userdata.ParentAccount;
 import com.google.android.material.chip.Chip;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ProvidersFragment extends Fragment {
     private static final String TAG = "ProvidersFragment";
 
     private ParentAccount user;
-    private LinearLayout container;
+    private RecyclerView recyclerViewChildren;
     private ChildAccount currentChild;
     private TextView textView33;
     private Chip rescueLogsCB;
@@ -38,6 +43,8 @@ public class ProvidersFragment extends Fragment {
     private Chip peakFlowCB;
     private Chip triageIncidentsCB;
     private Chip summaryChartsCB;
+    private ChildAdapter childAdapter;
+    private List<ChildAccount> childrenList;
 
     @SuppressLint("MissingInflatedId")
     @Nullable
@@ -62,7 +69,7 @@ public class ProvidersFragment extends Fragment {
         }
         
         textView33 = view.findViewById(R.id.textView33);
-        this.container = view.findViewById(R.id.ChildList2);
+        recyclerViewChildren = view.findViewById(R.id.recyclerViewChildren);
         currentChild = null;
         rescueLogsCB = view.findViewById(R.id.RL);
         controllerAdherenceSummaryCB = view.findViewById(R.id.CAS);
@@ -86,10 +93,16 @@ public class ProvidersFragment extends Fragment {
             buttonLinkProvider.setOnClickListener(this::createInvitation);
         }
         
+        // Setup RecyclerView
+        childrenList = new ArrayList<>();
         if (user != null) {
-            for (ChildAccount child : user.getChildren().values()) {
-                addChildToUI(child);
-            }
+            childrenList.addAll(user.getChildren().values());
+        }
+        
+        childAdapter = new ChildAdapter(childrenList, this::onChildSelected);
+        if (recyclerViewChildren != null) {
+            recyclerViewChildren.setLayoutManager(new LinearLayoutManager(getContext()));
+            recyclerViewChildren.setAdapter(childAdapter);
         }
         
         return view;
@@ -100,45 +113,37 @@ public class ProvidersFragment extends Fragment {
         startActivity(intent);
     }
 
-    private void addChildToUI(ChildAccount child) {
-        if (container == null || getContext() == null) {
-            return;
+    private void onChildSelected(ChildAccount child) {
+        currentChild = child;
+        if (textView33 != null) {
+            textView33.setText("Current Child: " + currentChild.getName() + "\nClick name to switch");
         }
-        
-        TextView tv = new TextView(getContext());
-        tv.setText("Name: " + child.getName() + "\n" + "Notes: " + child.getNotes());
-        tv.setTextSize(20);
-        tv.setPadding(40, 30, 40, 30);
-        tv.setOnClickListener(v -> {
-            currentChild = child;
-            if (textView33 != null) {
-                textView33.setText("Current Child: " + currentChild.getName() + "\nClick name to switch");
+        if (currentChild.getPermission() != null) {
+            if (rescueLogsCB != null) {
+                rescueLogsCB.setChecked(currentChild.getPermission().getRescueLogs());
             }
-            if (currentChild.getPermission() != null) {
-                if (rescueLogsCB != null) {
-                    rescueLogsCB.setChecked(currentChild.getPermission().getRescueLogs());
-                }
-                if (controllerAdherenceSummaryCB != null) {
-                    controllerAdherenceSummaryCB.setChecked(currentChild.getPermission().getControllerAdherenceSummary());
-                }
-                if (symptomsCB != null) {
-                    symptomsCB.setChecked(currentChild.getPermission().getSymptoms());
-                }
-                if (triggersCB != null) {
-                    triggersCB.setChecked(currentChild.getPermission().getTriggers());
-                }
-                if (peakFlowCB != null) {
-                    peakFlowCB.setChecked(currentChild.getPermission().getPeakFlow());
-                }
-                if (triageIncidentsCB != null) {
-                    triageIncidentsCB.setChecked(currentChild.getPermission().getTriageIncidents());
-                }
-                if (summaryChartsCB != null) {
-                    summaryChartsCB.setChecked(currentChild.getPermission().getSummaryCharts());
-                }
+            if (controllerAdherenceSummaryCB != null) {
+                controllerAdherenceSummaryCB.setChecked(currentChild.getPermission().getControllerAdherenceSummary());
             }
-        });
-        container.addView(tv);
+            if (symptomsCB != null) {
+                symptomsCB.setChecked(currentChild.getPermission().getSymptoms());
+            }
+            if (triggersCB != null) {
+                triggersCB.setChecked(currentChild.getPermission().getTriggers());
+            }
+            if (peakFlowCB != null) {
+                peakFlowCB.setChecked(currentChild.getPermission().getPeakFlow());
+            }
+            if (triageIncidentsCB != null) {
+                triageIncidentsCB.setChecked(currentChild.getPermission().getTriageIncidents());
+            }
+            if (summaryChartsCB != null) {
+                summaryChartsCB.setChecked(currentChild.getPermission().getSummaryCharts());
+            }
+        }
+        if (childAdapter != null) {
+            childAdapter.notifyDataSetChanged();
+        }
     }
 
     private Permission getPermission() {
@@ -179,6 +184,77 @@ public class ProvidersFragment extends Fragment {
                 }
             });
         }
+    }
+
+    private class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ViewHolder> {
+        private final List<ChildAccount> children;
+        private final ChildSelectionListener selectionListener;
+
+        public ChildAdapter(List<ChildAccount> children, ChildSelectionListener selectionListener) {
+            this.children = children;
+            this.selectionListener = selectionListener;
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_child_card_provider, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            if (position < 0 || position >= children.size()) {
+                return;
+            }
+            ChildAccount child = children.get(position);
+            holder.textViewChildName.setText(child.getName());
+            
+            String notes = child.getNotes();
+            if (notes != null && !notes.trim().isEmpty()) {
+                holder.textViewNotes.setText(notes);
+            } else {
+                holder.textViewNotes.setText("No notes");
+            }
+            
+            holder.itemView.setOnClickListener(v -> {
+                if (selectionListener != null) {
+                    selectionListener.onChildSelected(child);
+                }
+            });
+            
+            // Highlight selected child
+            if (currentChild != null && currentChild.getID().equals(child.getID())) {
+                holder.itemView.setAlpha(1.0f);
+                holder.cardView.setCardElevation(8f);
+            } else {
+                holder.itemView.setAlpha(0.7f);
+                holder.cardView.setCardElevation(4f);
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return children.size();
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            CardView cardView;
+            TextView textViewChildName;
+            TextView textViewNotes;
+
+            ViewHolder(View itemView) {
+                super(itemView);
+                cardView = (CardView) itemView;
+                textViewChildName = itemView.findViewById(R.id.textViewChildName);
+                textViewNotes = itemView.findViewById(R.id.textViewNotes);
+            }
+        }
+    }
+
+    private interface ChildSelectionListener {
+        void onChildSelected(ChildAccount child);
     }
 }
 
