@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapplication.providers.AccessInfoActivity;
+import com.example.myapplication.SignIn.SignInView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,8 +23,10 @@ public class ChildInhalerLogs extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inhaler_logs);
+
         Intent intent = getIntent();
         String ID;
+
         if(intent.hasExtra("isProvider")){
             findViewById(R.id.logsbackbutton).setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -32,9 +35,13 @@ public class ChildInhalerLogs extends AppCompatActivity {
                 }
             });
             ID = intent.getStringExtra("ID");
-            findViewById(R.id.textView23).setVisibility(View.GONE);
-            findViewById(R.id.controllerlog).setVisibility(View.GONE);
-        }else{
+        } else {
+            if (UserManager.currentUser == null) {
+                Intent signInIntent = new Intent(ChildInhalerLogs.this, SignInView.class);
+                startActivity(signInIntent);
+                finish();
+                return;
+            }
             findViewById(R.id.logsbackbutton).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -43,20 +50,19 @@ public class ChildInhalerLogs extends AppCompatActivity {
             });
             ID = UserManager.currentUser.getID();
         }
+
         RescueLogModel.readFromDB(ID, new ResultCallBack<HashMap<String, RescueLog>>() {
             @Override
             public void onComplete(HashMap<String, RescueLog> result) {
                 addRescueLogs(new ArrayList<>(result.values()));
             }
         });
-        if(!intent.hasExtra("isProvider")) {
-            ControllerLogModel.readFromDB(ID, new ResultCallBack<HashMap<String, ControllerLog>>() {
-                @Override
-                public void onComplete(HashMap<String, ControllerLog> result) {
-                    addControllerLogs(new ArrayList<>(result.values()));
-                }
-            });
-        }
+        ControllerLogModel.readFromDB(ID, new ResultCallBack<HashMap<String, ControllerLog>>() {
+            @Override
+            public void onComplete(HashMap<String, ControllerLog> result) {
+                addControllerLogs(new ArrayList<>(result.values()));
+            }
+        });
     }
     private void addRescueLogs(ArrayList<RescueLog> logs) {
         Collections.sort(logs);
