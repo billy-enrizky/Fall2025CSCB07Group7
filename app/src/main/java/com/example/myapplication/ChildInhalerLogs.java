@@ -20,21 +20,18 @@ import java.util.Collections;
 import java.util.HashMap;
 
 public class ChildInhalerLogs extends AppCompatActivity {
-    private static final String TAG = "ChildInhalerLogs";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inhaler_logs);
-        
-        // Check if user is logged in
+
         if (UserManager.currentUser == null) {
-            Log.w(TAG, "No user logged in, redirecting to SignIn");
             Intent intent = new Intent(ChildInhalerLogs.this, SignInView.class);
             startActivity(intent);
             finish();
             return;
-        }
+
         
         findViewById(R.id.logsbackbutton).setOnClickListener(new View.OnClickListener() {
             @Override
