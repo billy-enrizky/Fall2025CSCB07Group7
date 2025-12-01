@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapplication.ChildActivity;
+import com.example.myapplication.ChildInhalerMenu;
 import com.example.myapplication.R;
 import com.example.myapplication.UserManager;
 import com.example.myapplication.childmanaging.SignInChildProfileActivity;
@@ -51,7 +52,7 @@ public class CheckInView extends AppCompatActivity {
             Intent intent = new Intent(this, SignInChildProfileActivity.class);
             startActivity(intent);
         } else {
-            Intent intent = new Intent(this, ChildActivity.class);
+            Intent intent = new Intent(this, ChildInhalerMenu.class);
             startActivity(intent);
         }
         finish();
