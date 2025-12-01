@@ -36,7 +36,7 @@
         android:layout_marginStart="15dp"
         android:layout_marginTop="34dp"
         android:onClick="AccessInfo"
-        android:text="Access Info"
+        android:text="Children"
         app:layout_constraintStart_toStartOf="@+id/button16"
         app:layout_constraintTop_toBottomOf="@+id/button16" />
 

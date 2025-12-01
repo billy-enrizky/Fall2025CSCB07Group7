@@ -42,7 +42,7 @@ public class AdherenceSummaryActivity extends AppCompatActivity {
         childId = intent.getStringExtra("childId");
         parentId = intent.getStringExtra("parentId");
         currentChildName.setText("Current Child: " + childName);
-
+        loadAdherence();
     }
     public void Back(android.view.View view){
         Intent intent = new Intent(this, AccessInfoActivity.class);
