@@ -50,6 +50,12 @@ public class ChildActivity extends AppCompatActivity {
     
     private ChildAccount childAccount;
     private ActivityResultLauncher<Intent> pefEntryLauncher;
+    
+    private DatabaseReference pefReadingsRef;
+    private DatabaseReference childAccountRef;
+    private Query latestPEFQuery;
+    private ValueEventListener pefReadingsListener;
+    private ValueEventListener childAccountListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,9 +91,7 @@ public class ChildActivity extends AppCompatActivity {
                 new ActivityResultCallback<ActivityResult>() {
                     @Override
                     public void onActivityResult(ActivityResult result) {
-                        if (result.getResultCode() == RESULT_OK) {
-                            refreshZoneDisplay();
-                        }
+                        // Zone will update automatically via real-time listener
                     }
                 });
 
@@ -144,78 +148,186 @@ public class ChildActivity extends AppCompatActivity {
             }
         });
 
-        refreshZoneDisplay();
+        attachZoneListeners();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        refreshZoneDisplay();
+        // Update childAccount from UserManager in case it changed
+        if (UserManager.currentUser instanceof ChildAccount) {
+            childAccount = (ChildAccount) UserManager.currentUser;
+        }
+        attachZoneListeners();
     }
 
-    private void refreshZoneDisplay() {
+    @Override
+    protected void onPause() {
+        super.onPause();
+        detachZoneListeners();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        detachZoneListeners();
+    }
+
+    private void attachZoneListeners() {
         if (childAccount == null) {
             return;
         }
 
-        Integer personalBest = childAccount.getPersonalBest();
         String parentId = childAccount.getParent_id();
         String childId = childAccount.getID();
 
-        if (personalBest == null || personalBest <= 0) {
-            textViewZoneName.setText("Zone Not Available");
-            textViewZonePercentage.setText("Personal Best not set");
-            textViewLastPEF.setText("");
-            cardViewZone.setCardBackgroundColor(Zone.UNKNOWN.getColorResource());
-            return;
-        }
+        // Detach existing listeners first to prevent duplicates
+        detachZoneListeners();
 
-        DatabaseReference pefRef = UserManager.mDatabase
+        // Attach listener for PEF readings (real-time updates)
+        pefReadingsRef = UserManager.mDatabase
                 .child("users")
                 .child(parentId)
                 .child("children")
                 .child(childId)
                 .child("pefReadings");
 
-        Query latestPEFQuery = pefRef.orderByChild("timestamp").limitToLast(1);
+        latestPEFQuery = pefReadingsRef.orderByChild("timestamp").limitToLast(1);
 
-        latestPEFQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+        pefReadingsListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                if (snapshot.exists() && snapshot.hasChildren()) {
-                    PEFReading latestReading = null;
-                    for (DataSnapshot child : snapshot.getChildren()) {
-                        latestReading = child.getValue(PEFReading.class);
-                        break;
-                    }
-
-                    if (latestReading != null) {
-                        int pefValue = latestReading.getValue();
-                        Zone zone = ZoneCalculator.calculateZone(pefValue, personalBest);
-                        double percentage = ZoneCalculator.calculatePercentage(pefValue, personalBest);
-
-                        textViewZoneName.setText(zone.getDisplayName());
-                        textViewZonePercentage.setText(String.format(Locale.getDefault(), "%.1f%% of Personal Best", percentage));
-                        
-                        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-                        String dateStr = sdf.format(new Date(latestReading.getTimestamp()));
-                        textViewLastPEF.setText("Last PEF: " + dateStr);
-                        
-                        cardViewZone.setCardBackgroundColor(zone.getColorResource());
-                    } else {
-                        setUnknownZone();
-                    }
-                } else {
-                    setUnknownZone();
-                }
+                updateZoneDisplayFromSnapshot(snapshot);
             }
 
             @Override
             public void onCancelled(DatabaseError error) {
                 Log.e(TAG, "Error loading PEF reading", error.toException());
-                setUnknownZone();
+                runOnUiThread(() -> {
+                    if (!isFinishing() && !isDestroyed()) {
+                        setUnknownZone();
+                    }
+                });
             }
-        });
+        };
+        
+        latestPEFQuery.addValueEventListener(pefReadingsListener);
+
+        // Attach listener for child account (to catch personalBest updates)
+        childAccountRef = UserManager.mDatabase
+                .child("users")
+                .child(parentId)
+                .child("children")
+                .child(childId);
+
+        childAccountListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                // Update childAccount from snapshot
+                ChildAccount updatedAccount = snapshot.getValue(ChildAccount.class);
+                if (updatedAccount != null) {
+                    childAccount = updatedAccount;
+                    // Trigger zone update by re-querying latest PEF
+                    if (latestPEFQuery != null) {
+                        latestPEFQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot pefSnapshot) {
+                                updateZoneDisplayFromSnapshot(pefSnapshot);
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError error) {
+                                Log.e(TAG, "Error refreshing zone after personalBest change", error.toException());
+                            }
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e(TAG, "Error loading child account", error.toException());
+            }
+        };
+        
+        childAccountRef.addValueEventListener(childAccountListener);
+    }
+
+    private void detachZoneListeners() {
+        if (latestPEFQuery != null && pefReadingsListener != null) {
+            latestPEFQuery.removeEventListener(pefReadingsListener);
+            pefReadingsListener = null;
+        }
+        
+        if (childAccountRef != null && childAccountListener != null) {
+            childAccountRef.removeEventListener(childAccountListener);
+            childAccountListener = null;
+        }
+        
+        // Reset query references so they're recreated on next attach
+        latestPEFQuery = null;
+        pefReadingsRef = null;
+        childAccountRef = null;
+    }
+
+    private void updateZoneDisplayFromSnapshot(DataSnapshot snapshot) {
+        if (childAccount == null || isFinishing() || isDestroyed()) {
+            return;
+        }
+
+        Integer personalBest = childAccount.getPersonalBest();
+
+        if (personalBest == null || personalBest <= 0) {
+            runOnUiThread(() -> {
+                if (!isFinishing() && !isDestroyed()) {
+                    textViewZoneName.setText("Zone Not Available");
+                    textViewZonePercentage.setText("Personal Best not set");
+                    textViewLastPEF.setText("");
+                    cardViewZone.setCardBackgroundColor(Zone.UNKNOWN.getColorResource());
+                }
+            });
+            return;
+        }
+
+        if (snapshot.exists() && snapshot.hasChildren()) {
+            PEFReading latestReading = null;
+            for (DataSnapshot child : snapshot.getChildren()) {
+                latestReading = child.getValue(PEFReading.class);
+                break;
+            }
+
+            if (latestReading != null) {
+                int pefValue = latestReading.getValue();
+                Zone zone = ZoneCalculator.calculateZone(pefValue, personalBest);
+                double percentage = ZoneCalculator.calculatePercentage(pefValue, personalBest);
+
+                final PEFReading finalReading = latestReading;
+                runOnUiThread(() -> {
+                    if (!isFinishing() && !isDestroyed()) {
+                        textViewZoneName.setText(zone.getDisplayName());
+                        textViewZonePercentage.setText(String.format(Locale.getDefault(), "%.1f%% of Personal Best", percentage));
+                        
+                        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+                        String dateStr = sdf.format(new Date(finalReading.getTimestamp()));
+                        textViewLastPEF.setText("Last PEF: " + dateStr);
+                        
+                        cardViewZone.setCardBackgroundColor(zone.getColorResource());
+                    }
+                });
+            } else {
+                runOnUiThread(() -> {
+                    if (!isFinishing() && !isDestroyed()) {
+                        setUnknownZone();
+                    }
+                });
+            }
+        } else {
+            runOnUiThread(() -> {
+                if (!isFinishing() && !isDestroyed()) {
+                    setUnknownZone();
+                }
+            });
+        }
     }
 
     private void setUnknownZone() {
