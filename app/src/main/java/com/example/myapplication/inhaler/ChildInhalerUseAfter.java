@@ -119,7 +119,13 @@ public class ChildInhalerUseAfter extends AppCompatActivity {
                                                         Toast.makeText(ChildInhalerUseAfter.this, "Warning: Achievement Error.", Toast.LENGTH_SHORT).show();
                                                         startActivity(new Intent(ChildInhalerUseAfter.this, ChildInhalerMenu.class));
                                                     } else {
-                                                        achievement.updateStreak();
+                                                        achievement.updateStreak();/*
+                                                        if (!achievement.badges.get(0)) {
+                                                            if (achievement.checkBadge1()) {
+                                                                Toast.makeText(this, "You've earned a new badge!", Toast.LENGTH_SHORT).show();
+                                                                achievement.badges.set(0, true);
+                                                            }
+                                                        }*/
                                                         AchievementsModel.writeIntoDB(achievement, new CallBack() {
                                                             @Override
                                                             public void onComplete() {

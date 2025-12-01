@@ -14,7 +14,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/activity_r3_instructions" />
+        android:scaleType="fitXY"
+        app:srcCompat="@drawable/activity_r3_video" />
 
     <Button
         android:id="@+id/button8"
