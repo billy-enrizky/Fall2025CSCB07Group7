@@ -732,17 +732,10 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
 
             Toast.makeText(this, "PDF generated: " + filename, Toast.LENGTH_LONG).show();
 
-            android.net.Uri fileUri = FileProvider.getUriForFile(
-                    this,
-                    getPackageName() + ".fileprovider",
-                    outputFile
-            );
-
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("application/pdf");
-            shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
-            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(shareIntent, "Share PDF Report"));
+            Intent viewIntent = new Intent(this, ProviderReportViewActivity.class);
+            viewIntent.putExtra("pdfFilePath", outputFile.getAbsolutePath());
+            viewIntent.putExtra("childName", childName);
+            startActivity(viewIntent);
 
         } catch (IOException e) {
             Log.e(TAG, "Error generating PDF", e);
