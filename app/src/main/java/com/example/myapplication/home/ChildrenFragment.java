@@ -571,6 +571,31 @@ public class ChildrenFragment extends Fragment {
         buttonPEFHistory.setVisibility(visibility);
     }
 
+    /**
+     * Checks if a child has any permission enabled (shared with provider)
+     * @param child The child account to check
+     * @return true if any permission is enabled, false otherwise
+     */
+    private boolean hasAnyPermissionEnabled(ChildAccount child) {
+        if (child == null) {
+            return false;
+        }
+        
+        com.example.myapplication.providermanaging.Permission permission = child.getPermission();
+        if (permission == null) {
+            return false;
+        }
+        
+        // Check if any permission field is enabled
+        return Boolean.TRUE.equals(permission.getRescueLogs()) ||
+               Boolean.TRUE.equals(permission.getControllerAdherenceSummary()) ||
+               Boolean.TRUE.equals(permission.getSymptoms()) ||
+               Boolean.TRUE.equals(permission.getTriggers()) ||
+               Boolean.TRUE.equals(permission.getPeakFlow()) ||
+               Boolean.TRUE.equals(permission.getTriageIncidents()) ||
+               Boolean.TRUE.equals(permission.getSummaryCharts());
+    }
+
     private void deleteChild(ChildAccount child, int position) {
         new android.app.AlertDialog.Builder(getContext())
                 .setTitle("Delete Child")
@@ -646,7 +671,21 @@ public class ChildrenFragment extends Fragment {
                 return;
             }
             ChildZoneInfo info = children.get(position);
-            holder.textViewChildName.setText(info.child.getName());
+            
+            // Check if child has any permissions enabled (shared with provider)
+            boolean isSharedWithProvider = hasAnyPermissionEnabled(info.child);
+            
+            if (isSharedWithProvider) {
+                // Display child name in red with asterisk
+                holder.textViewChildName.setText("* " + info.child.getName());
+                holder.textViewChildName.setTextColor(0xFFF44336); // Red color
+                holder.textViewSharedWithProvider.setVisibility(View.VISIBLE);
+            } else {
+                // Normal display
+                holder.textViewChildName.setText(info.child.getName());
+                holder.textViewChildName.setTextColor(0xFF000000); // Black color (default)
+                holder.textViewSharedWithProvider.setVisibility(View.GONE);
+            }
             
             String notes = info.child.getNotes();
             if (notes != null && !notes.trim().isEmpty()) {
@@ -679,12 +718,14 @@ public class ChildrenFragment extends Fragment {
             CardView cardView;
             TextView textViewChildName;
             TextView textViewNotes;
+            TextView textViewSharedWithProvider;
 
             ViewHolder(View itemView) {
                 super(itemView);
                 cardView = (CardView) itemView;
                 textViewChildName = itemView.findViewById(R.id.textViewChildName);
                 textViewNotes = itemView.findViewById(R.id.textViewNotes);
+                textViewSharedWithProvider = itemView.findViewById(R.id.textViewSharedWithProvider);
             }
         }
     }
