@@ -111,6 +111,10 @@ public class SignInPresenterTest {
         assertNotNull("QueryDBforNonChildren callback should be captured", queryCallbackHolder[0]);
         queryCallbackHolder[0].onComplete(parentAccount);
         
+        // Verify all callback paths are executed (lines 45, 50, 51-55)
+        verify(mockView).showShortMessage("Welcome!");
+        verify(mockView).GoToMainActivity();
+        verify(mockView, never()).GoToOnBoardingActivity();
         verify(mockModel, never()).usernameExists(anyString(), any());
     }
 
@@ -144,11 +148,16 @@ public class SignInPresenterTest {
         assertNotNull("QueryDBforChildren callback should be captured", queryCallbackHolder[0]);
         queryCallbackHolder[0].onComplete(childAccount);
         
+        // Verify all callback paths are executed (lines 81-87)
+        verify(mockView).showShortMessage("Welcome!");
+        verify(mockView).GoToMainActivity();
+        verify(mockView, never()).GoToOnBoardingActivity();
+        assertEquals(childAccount, UserManager.currentUser);
         verify(mockModel, never()).SignInAuth(anyString(), anyString(), any());
     }
 
     @Test
-    public void testSignin_WithWhitespaceInputs_TrimsInputs() {
+    public void testSignin_WithWhitespaceEmail_TrimsAndCallsParentProvider() {
         String email = "  test@example.com  ";
         String password = "  password123  ";
         String userId = "user123";
@@ -172,12 +181,55 @@ public class SignInPresenterTest {
         ArgumentCaptor<ResultCallBack<Boolean>> authCallback = ArgumentCaptor.forClass(ResultCallBack.class);
         verify(mockModel).SignInAuth(eq("test@example.com"), eq("password123"), authCallback.capture());
         
-        // Execute callback to ensure line 30 (password.trim()) is covered
+        // Execute callback to ensure line 30 (password.trim()) and line 32 (email.trim()) are covered
         authCallback.getValue().onComplete(true);
         verify(mockModel).GetCurrentUIDAuth();
         verify(mockModel).QueryDBforNonChildren(eq(userId), any(ResultCallBack.class));
         assertNotNull("QueryDBforNonChildren callback should be captured", queryCallbackHolder[0]);
         queryCallbackHolder[0].onComplete(parentAccount);
+        
+        // Verify all callback paths are executed
+        verify(mockView).showShortMessage("Welcome!");
+        verify(mockView).GoToMainActivity();
+        verify(mockView, never()).GoToOnBoardingActivity();
+    }
+
+    @Test
+    public void testSignin_WithWhitespaceUsername_TrimsAndCallsChild() {
+        String username = "  testuser  ";
+        String password = "  password123  ";
+        String parentId = "parent123";
+        
+        ChildAccount childAccount = new ChildAccount();
+        childAccount.setPassword("password123");
+        childAccount.setID("testuser");
+        childAccount.setFirstTime(false);
+        
+        final ResultCallBack<UserData>[] queryCallbackHolder = new ResultCallBack[1];
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) {
+                queryCallbackHolder[0] = invocation.getArgument(2);
+                return null;
+            }
+        }).when(mockModel).QueryDBforChildren(eq(parentId), eq("testuser"), any(ResultCallBack.class));
+        
+        presenter.signin(username, password);
+        
+        ArgumentCaptor<ResultCallBack<String>> usernameCallback = ArgumentCaptor.forClass(ResultCallBack.class);
+        verify(mockModel).usernameExists(eq("testuser"), usernameCallback.capture());
+        
+        usernameCallback.getValue().onComplete(parentId);
+        verify(mockModel).QueryDBforChildren(eq(parentId), eq("testuser"), any(ResultCallBack.class));
+        assertNotNull("QueryDBforChildren callback should be captured", queryCallbackHolder[0]);
+        queryCallbackHolder[0].onComplete(childAccount);
+        
+        // Verify all callback paths are executed (lines 30, 35, 81-87)
+        verify(mockView).showShortMessage("Welcome!");
+        verify(mockView).GoToMainActivity();
+        verify(mockView, never()).GoToOnBoardingActivity();
+        assertEquals(childAccount, UserManager.currentUser);
+        verify(mockModel, never()).SignInAuth(anyString(), anyString(), any());
     }
 
     // ==================== signInForParentAndProvider() Method Tests ====================
