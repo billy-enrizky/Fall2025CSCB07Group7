@@ -117,7 +117,7 @@ public class ChildInhalerUseAfter extends AppCompatActivity {
 
                                                     if (achievement == null) {
                                                         Toast.makeText(ChildInhalerUseAfter.this, "Warning: Achievement Error.", Toast.LENGTH_SHORT).show();
-                                                        startActivity(new Intent(ChildInhalerUseAfter.this, ChildInhalerMenu.class));
+                                                        startActivity(new Intent(ChildInhalerUseAfter.this, ChildActivity.class));
                                                     } else {
                                                         // Update timeOfLastDose for backward compatibility
                                                         achievement.setTimeOfLastDose(System.currentTimeMillis());
@@ -138,7 +138,7 @@ public class ChildInhalerUseAfter extends AppCompatActivity {
                                                                 AchievementsModel.writeIntoDB(achievement, new CallBack() {
                                                                     @Override
                                                                     public void onComplete() {
-                                                                        startActivity(new Intent(ChildInhalerUseAfter.this, ChildInhalerMenu.class));
+                                                                        startActivity(new Intent(ChildInhalerUseAfter.this, ChildActivity.class));
                                                                     }
                                                                 });
                                                             }
