@@ -151,10 +151,33 @@ public class SignInPresenterTest {
     public void testSignin_WithWhitespaceInputs_TrimsInputs() {
         String email = "  test@example.com  ";
         String password = "  password123  ";
+        String userId = "user123";
+        
+        when(mockModel.GetCurrentUIDAuth()).thenReturn(userId);
+        ParentAccount parentAccount = new ParentAccount();
+        parentAccount.setFirstTime(false);
+        parentAccount.setID(userId);
+        
+        final ResultCallBack<UserData>[] queryCallbackHolder = new ResultCallBack[1];
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) {
+                queryCallbackHolder[0] = invocation.getArgument(1);
+                return null;
+            }
+        }).when(mockModel).QueryDBforNonChildren(eq(userId), any(ResultCallBack.class));
         
         presenter.signin(email, password);
         
-        verify(mockModel).SignInAuth(eq("test@example.com"), eq("password123"), any());
+        ArgumentCaptor<ResultCallBack<Boolean>> authCallback = ArgumentCaptor.forClass(ResultCallBack.class);
+        verify(mockModel).SignInAuth(eq("test@example.com"), eq("password123"), authCallback.capture());
+        
+        // Execute callback to ensure line 30 (password.trim()) is covered
+        authCallback.getValue().onComplete(true);
+        verify(mockModel).GetCurrentUIDAuth();
+        verify(mockModel).QueryDBforNonChildren(eq(userId), any(ResultCallBack.class));
+        assertNotNull("QueryDBforNonChildren callback should be captured", queryCallbackHolder[0]);
+        queryCallbackHolder[0].onComplete(parentAccount);
     }
 
     // ==================== signInForParentAndProvider() Method Tests ====================
