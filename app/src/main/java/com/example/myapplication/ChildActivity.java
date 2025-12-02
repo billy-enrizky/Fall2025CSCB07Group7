@@ -66,13 +66,13 @@ public class ChildActivity extends AppCompatActivity {
             return insets;
         });
 
-        if (!(UserManager.currentUser instanceof ChildAccount)) {
+        if (!(com.example.myapplication.UserManager.currentUser instanceof ChildAccount)) {
             Log.e(TAG, "Current user is not a ChildAccount");
             finish();
             return;
         }
 
-        childAccount = (ChildAccount) UserManager.currentUser;
+        childAccount = (ChildAccount) com.example.myapplication.UserManager.currentUser;
 
         textViewZoneName = findViewById(R.id.textViewZoneName);
         textViewZonePercentage = findViewById(R.id.textViewZonePercentage);
@@ -126,7 +126,7 @@ public class ChildActivity extends AppCompatActivity {
         findViewById(R.id.debugButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(ChildActivity.this, ChildInhalerMenu.class);
+                Intent intent = new Intent(ChildActivity.this, com.example.myapplication.ChildInhalerMenu.class);
                 intent.putExtra("childId", childAccount.getID());
                 intent.putExtra("parentId", childAccount.getParent_id());
                 startActivity(intent);
@@ -140,8 +140,8 @@ public class ChildActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // Update childAccount from UserManager in case it changed
-        if (UserManager.currentUser instanceof ChildAccount) {
-            childAccount = (ChildAccount) UserManager.currentUser;
+        if (com.example.myapplication.UserManager.currentUser instanceof ChildAccount) {
+            childAccount = (ChildAccount) com.example.myapplication.UserManager.currentUser;
         }
         attachZoneListeners();
     }
@@ -170,7 +170,7 @@ public class ChildActivity extends AppCompatActivity {
         detachZoneListeners();
 
         // Attach listener for PEF readings (real-time updates)
-        pefReadingsRef = UserManager.mDatabase
+        pefReadingsRef = com.example.myapplication.UserManager.mDatabase
                 .child("users")
                 .child(parentId)
                 .child("children")
@@ -199,7 +199,7 @@ public class ChildActivity extends AppCompatActivity {
         latestPEFQuery.addValueEventListener(pefReadingsListener);
 
         // Attach listener for child account (to catch personalBest updates)
-        childAccountRef = UserManager.mDatabase
+        childAccountRef = com.example.myapplication.UserManager.mDatabase
                 .child("users")
                 .child(parentId)
                 .child("children")
