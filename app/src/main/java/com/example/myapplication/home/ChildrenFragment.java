@@ -374,10 +374,81 @@ public class ChildrenFragment extends Fragment {
 
     private void updateButtonsForSelectedChild() {
         if (selectedChildInfo == null) {
+            resetAllButtonTexts();
             return;
         }
         
         textViewCurrentChild.setText("Current Child: " + selectedChildInfo.child.getName());
+        updateButtonSharingIndicators();
+    }
+
+    /**
+     * Updates button text to show red color and asterisk for buttons that correspond to shared data types
+     */
+    private void updateButtonSharingIndicators() {
+        if (selectedChildInfo == null || selectedChildInfo.child == null) {
+            resetAllButtonTexts();
+            return;
+        }
+        
+        com.example.myapplication.providermanaging.Permission permission = selectedChildInfo.child.getPermission();
+        if (permission == null) {
+            // Reset all buttons to normal
+            resetAllButtonTexts();
+            return;
+        }
+        
+        // Map permissions to buttons
+        // peakFlow → PEF History
+        updateButtonSharingIndicator(buttonPEFHistory, "PEF History", Boolean.TRUE.equals(permission.getPeakFlow()));
+        
+        // triageIncidents → Incident History
+        updateButtonSharingIndicator(buttonIncidentHistory, "Incident History", Boolean.TRUE.equals(permission.getTriageIncidents()));
+        
+        // summaryCharts → Generate Report
+        updateButtonSharingIndicator(buttonGenerateReport, "Generate Report", Boolean.TRUE.equals(permission.getSummaryCharts()));
+        
+        // controllerAdherenceSummary → Controller Schedule
+        updateButtonSharingIndicator(buttonControllerSchedule, "Controller Schedule", Boolean.TRUE.equals(permission.getControllerAdherenceSummary()));
+        
+        // symptoms → Check-in
+        updateButtonSharingIndicator(buttonDailyCheckin, "Check-in", Boolean.TRUE.equals(permission.getSymptoms()));
+        
+        // triggers → Checkin History
+        updateButtonSharingIndicator(buttonDailyCheckinHistory, "Checkin History", Boolean.TRUE.equals(permission.getTriggers()));
+        
+        // rescueLogs → Inhaler
+        updateButtonSharingIndicator(buttonInhaler, "Inhaler", Boolean.TRUE.equals(permission.getRescueLogs()));
+    }
+
+    /**
+     * Updates a button's text to show red color and asterisk if shared, or normal text if not shared
+     */
+    private void updateButtonSharingIndicator(Button button, String originalText, boolean isShared) {
+        if (button == null) {
+            return;
+        }
+        
+        if (isShared) {
+            button.setText(originalText);
+            button.setTextColor(0xFFF44336); // Red color
+        } else {
+            button.setText(originalText);
+            button.setTextColor(0xFFFFFFFF); // White color (default for buttons)
+        }
+    }
+
+    /**
+     * Resets all button texts to their original state (no asterisk, white text)
+     */
+    private void resetAllButtonTexts() {
+        updateButtonSharingIndicator(buttonPEFHistory, "PEF History", false);
+        updateButtonSharingIndicator(buttonIncidentHistory, "Incident History", false);
+        updateButtonSharingIndicator(buttonGenerateReport, "Generate Report", false);
+        updateButtonSharingIndicator(buttonControllerSchedule, "Controller Schedule", false);
+        updateButtonSharingIndicator(buttonDailyCheckin, "Check-in", false);
+        updateButtonSharingIndicator(buttonDailyCheckinHistory, "Checkin History", false);
+        updateButtonSharingIndicator(buttonInhaler, "Inhaler", false);
     }
 
     private void setupButtonIcons() {
@@ -569,6 +640,11 @@ public class ChildrenFragment extends Fragment {
         buttonDeleteChild.setVisibility(visibility);
         buttonActionPlan.setVisibility(visibility);
         buttonPEFHistory.setVisibility(visibility);
+        
+        // Reset button texts when hiding buttons (no child selected)
+        if (!visible) {
+            resetAllButtonTexts();
+        }
     }
 
     /**
@@ -682,7 +758,7 @@ public class ChildrenFragment extends Fragment {
                 holder.textViewSharedWithProvider.setVisibility(View.VISIBLE);
             } else {
                 // Normal display
-                holder.textViewChildName.setText(info.child.getName());
+            holder.textViewChildName.setText(info.child.getName());
                 holder.textViewChildName.setTextColor(0xFF000000); // Black color (default)
                 holder.textViewSharedWithProvider.setVisibility(View.GONE);
             }
