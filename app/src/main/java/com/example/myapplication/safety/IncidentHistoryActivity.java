@@ -33,7 +33,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class IncidentHistoryActivity extends AppCompatActivity {
+public class
+IncidentHistoryActivity extends AppCompatActivity {
     private static final String TAG = "IncidentHistoryActivity";
     
     private RecyclerView recyclerViewIncidents;

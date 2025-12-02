@@ -8,16 +8,15 @@
     tools:context=".safety.TriageActivity">
 
     <ImageView
-        android:id="@+id/imageViewBackground"
+        android:id="@+id/imageView42"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="fitXY"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/activity_r3_template" />
-
+        app:srcCompat="@drawable/activity_r4_triage" />
     <Button
         android:id="@+id/buttonBack"
         android:layout_width="wrap_content"
@@ -59,7 +58,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/happy_monkey"
                 android:text="Breathing Assessment"
-                android:textColor="#006157"
+                android:textColor="#CAEFEF"
                 android:textSize="30dp"
                 android:textStyle="bold" />
 

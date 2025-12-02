@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
 
     <ImageView
-        android:id="@+id/imageView35"
+        android:id="@+id/imageView42"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:srcCompat="@drawable/activity_r3_template" />
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/activity_r4_triage" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -29,6 +34,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/happy_monkey"
             android:text="Enter current PEF reading (optional)"
+            android:textColor="#FFFFFF"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -37,9 +43,13 @@
             android:layout_width="382dp"
             android:layout_height="62dp"
             android:layout_marginTop="16dp"
+            android:backgroundTint="#FDFDFD"
             android:fontFamily="@font/happy_monkey"
+            android:foregroundTint="#FFFFFF"
             android:hint="Enter PEF value"
-            android:inputType="number" />
+            android:inputType="number"
+            android:textColor="#FFFEFE"
+            android:textColorHint="#FFFFFF" />
 
         <Button
             android:id="@+id/buttonSkipPEF"
