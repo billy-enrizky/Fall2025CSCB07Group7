@@ -17,8 +17,11 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.myapplication.ChildInhalerLogs;
+import com.example.myapplication.LogHistoryActivity;
 import com.example.myapplication.R;
 import com.example.myapplication.UserManager;
+import com.example.myapplication.childmanaging.SignInChildProfileActivity;
 import com.example.myapplication.userdata.ChildAccount;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -51,7 +54,8 @@ public class PEFHistoryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_pef_history);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            // Only apply horizontal padding, not vertical to avoid white space at top and bottom
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
             return insets;
         });
 
@@ -63,6 +67,11 @@ public class PEFHistoryActivity extends AppCompatActivity {
             ChildAccount childAccount = (ChildAccount) UserManager.currentUser;
             childId = childAccount.getID();
             parentId = childAccount.getParent_id();
+        } else if (SignInChildProfileActivity.currentChild != null) {
+            // When logged in via children manager
+            ChildAccount currentChild = SignInChildProfileActivity.currentChild;
+            childId = currentChild.getID();
+            parentId = currentChild.getParent_id();
         } else {
             Log.e(TAG, "No childId/parentId provided and current user is not a ChildAccount");
             finish();
@@ -72,38 +81,57 @@ public class PEFHistoryActivity extends AppCompatActivity {
         recyclerViewPEF = findViewById(R.id.recyclerViewPEF);
         textViewEmpty = findViewById(R.id.textViewEmpty);
         Button buttonBack = findViewById(R.id.buttonBack);
-        Button buttonEnterPEF = findViewById(R.id.buttonEnterPEF);
         Button buttonRemoveAll = findViewById(R.id.buttonRemoveAll);
 
-        if(intent.hasExtra("isProvider")){
+        if (buttonBack == null) {
+            Log.e(TAG, "buttonBack not found in layout");
+            finish();
+            return;
+        }
+
+        if (intent != null && intent.hasExtra("isProvider")) {
             isProvider = true;
-            buttonEnterPEF.setVisibility(View.GONE);
-            buttonRemoveAll.setVisibility(View.GONE);
+            if (buttonRemoveAll != null) {
+                buttonRemoveAll.setVisibility(View.GONE);
+            }
         }
 
         buttonBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                // For provider view, just return to the previous screen (AccessInfoActivity)
+                if (isProvider) {
+                    finish();
+                    return;
+                }
+
+                // If a parent is logged in, go back to ParentActivity with the Children tab selected
+                if (UserManager.currentUser instanceof com.example.myapplication.userdata.ParentAccount) {
+                    Intent parentIntent = new Intent(PEFHistoryActivity.this, com.example.myapplication.ParentActivity.class);
+                    parentIntent.putExtra("defaultTab", "children");
+                    parentIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(parentIntent);
+                    finish();
+                } else {
+                    // Child context: return to the log history menu
+                    Intent logHistoryIntent = new Intent(PEFHistoryActivity.this, LogHistoryActivity.class);
+                    logHistoryIntent.putExtra("childId", childId);
+                    logHistoryIntent.putExtra("parentId", parentId);
+                    startActivity(logHistoryIntent);
+                    finish();
+                }
             }
         });
+
         
-        buttonEnterPEF.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(PEFHistoryActivity.this, PEFEntryActivity.class);
-                intent.putExtra("childId", childId);
-                intent.putExtra("parentId", parentId);
-                startActivity(intent);
-            }
-        });
-        
-        buttonRemoveAll.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                removeAllHistory();
-            }
-        });
+        if (buttonRemoveAll != null) {
+            buttonRemoveAll.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    removeAllHistory();
+                }
+            });
+        }
         
         historyItems = new ArrayList<>();
         adapter = new HistoryAdapter(historyItems, parentId, childId, this);

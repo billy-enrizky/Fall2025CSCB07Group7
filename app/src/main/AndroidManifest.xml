@@ -21,7 +21,7 @@
             android:name=".providers.AccessInfoActivity"
             android:exported="false" />
         <activity
-            android:name=".providermanaging.AccessPermissionActivity"
+            android:name=".providermanaging.ProviderManagerActivity"
             android:exported="false" />
         <activity
             android:name=".childmanaging.ScrollingActivity"
@@ -80,6 +80,9 @@
             android:name=".ChildInhalerVideo"
             android:exported="false" />
         <activity
+            android:name=".LogHistoryActivity"
+            android:exported="false" />
+        <activity
             android:name=".ParentInhalerCreate"
             android:exported="false" />
         <activity
@@ -90,6 +93,9 @@
             android:exported="false" />
         <activity
             android:name=".childmanaging.CreateChildActivity"
+            android:exported="false" />
+        <activity
+            android:name=".childmanaging.EditNotesActivity"
             android:exported="false" />
         <activity
             android:name=".OnBoardingActivity"
@@ -136,9 +142,6 @@
         <activity
             android:name=".reports.ProviderReportGeneratorActivity"
             android:exported="true" />
-        <activity
-            android:name=".reports.ChildDashboardActivity"
-            android:exported="false" />
         <activity
             android:name=".reports.TrendSnippetActivity"
             android:exported="false" />

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -9,6 +10,7 @@
         android:id="@+id/textViewPEFTriageQuestion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/happy_monkey"
         android:text="Enter current PEF reading (optional)"
         android:textSize="18sp"
         android:textStyle="bold" />
@@ -18,6 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:fontFamily="@font/happy_monkey"
         android:hint="Enter PEF value"
         android:inputType="number" />
 
@@ -26,15 +29,25 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Skip" />
+        android:backgroundTint="#01A829"
+        android:fontFamily="@font/happy_monkey"
+        android:text="Skip"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        app:cornerRadius="30dp" />
 
     <Button
         android:id="@+id/buttonNextPEF"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:backgroundTint="#01A829"
+        android:fontFamily="@font/happy_monkey"
         android:text="Next"
-        android:visibility="gone" />
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:cornerRadius="30dp" />
 
 </LinearLayout>
 

@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    tools:context=".medication.ControllerScheduleActivity">
+    tools:context=".medication.ControllerScheduleActivity"
+    android:background="#99D9EA">
 
     <ScrollView
         android:layout_width="0dp"
@@ -58,6 +59,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:backgroundTint="#6E8CA0"
                 android:text="Add Date" />
 
             <Button
@@ -65,6 +67,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:backgroundTint="#6E8CA0"
                 android:text="Save Schedule" />
 
             <Button
@@ -72,6 +75,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:backgroundTint="#6E8CA0"
                 android:text="Cancel" />
 
         </LinearLayout>
