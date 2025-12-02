@@ -150,7 +150,7 @@ public class ChildActivity extends AppCompatActivity {
         });
 
         logsButton.setOnClickListener(v -> {
-            startActivity(new Intent(ChildActivity.this, ChildInhalerLogs.class));
+            startActivity(new Intent(ChildActivity.this, LogHistoryActivity.class));
         });
 
         useButton.setOnClickListener(v -> {
