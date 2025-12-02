@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
             String parentID = child.getParent_id();
             String username = child.getID();
             UserManager.ChildUserListener(parentID, username);
-            Intent intent1 = new Intent(MainActivity.this, ChildInhalerMenu.class);
+            Intent intent1 = new Intent(MainActivity.this, ChildActivity.class);
             startActivity(intent1);
             finish();
         } else if (accountType == AccountType.PARENT) {
