@@ -1,34 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
+    android:layout_width="280dp"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardCornerRadius="8dp"
-    app:cardElevation="2dp">
+    app:cardElevation="4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:padding="16dp">
 
         <TextView
-            android:id="@+id/textViewDate"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Dec 02, 2025"
-            android:textSize="18sp" />
-
-        <Button
-            android:id="@+id/buttonRemove"
+            android:id="@+id/textViewChildName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#6E8CA0"
-            android:text="Remove" />
+            android:text="Child Name"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/textViewNotes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="No notes"
+            android:textSize="14sp"
+            android:maxLines="3"
+            android:ellipsize="end" />
     </LinearLayout>
-
 </androidx.cardview.widget.CardView>
 
