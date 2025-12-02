@@ -46,7 +46,6 @@
         android:onClick="filterBySymptomsButton"
         android:text="Filter by Symptoms"
         android:textColor="#FFFFFF"
-        android:backgroundTint="#6E8CA0"
         app:cornerRadius="5dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -79,7 +78,6 @@
         android:onClick="backToProviderSignIn"
         android:text="Back"
         android:textColor="#FFFFFF"
-        android:backgroundTint="#6E8CA0"
         app:cornerRadius="5dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
