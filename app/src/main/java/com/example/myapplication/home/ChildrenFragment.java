@@ -396,7 +396,10 @@ public class ChildrenFragment extends Fragment {
         setButtonIcon(buttonGenerateReport, R.drawable.childrenmanager_generatereport);
         setButtonIcon(buttonIncidentHistory, R.drawable.childrenmanager_incidenthistory);
         setButtonIcon(buttonDailyCheckinHistory, R.drawable.childenmanager_checkinhistory);
+        setButtonIcon(buttonActionPlan, R.drawable.childrenmanager_actionplan);
+        setButtonIcon(buttonPEFHistory, R.drawable.childrenmanager_peflogs);
         setButtonIcon(buttonDeleteChild, R.drawable.childrenmanager_deletechild);
+
     }
     
     private void setButtonIcon(Button button, int drawableResId) {
@@ -406,14 +409,14 @@ public class ChildrenFragment extends Fragment {
         Drawable drawable = ContextCompat.getDrawable(getContext(), drawableResId);
         if (drawable != null) {
             // Scale icon to 24dp size to fit within button alongside text
-            int iconSizeDp = 24;
+            int iconSizeDp = 34;
             int iconSizePx = (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 
                 iconSizeDp, 
                 getContext().getResources().getDisplayMetrics()
             );
             drawable.setBounds(0, 0, iconSizePx, iconSizePx);
-            button.setCompoundDrawables(drawable, null, null, null);
+            button.setCompoundDrawables(null, drawable, null, null);
             button.setCompoundDrawablePadding(8); // 8dp padding between icon and text
         }
     }
