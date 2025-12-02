@@ -17,6 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/activity_r4_triage" />
+
     <Button
         android:id="@+id/buttonBack"
         android:layout_width="wrap_content"

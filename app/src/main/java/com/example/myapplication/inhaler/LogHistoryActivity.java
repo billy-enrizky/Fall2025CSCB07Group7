@@ -9,15 +9,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
-import com.example.myapplication.ChildActivity;
-import com.example.myapplication.ChildInhalerLogs;
-import com.example.myapplication.ParentBadge;
-import com.example.myapplication.R;
-import com.example.myapplication.UserManager;
 import com.example.myapplication.childmanaging.SignInChildProfileActivity;
 import com.example.myapplication.safety.PEFHistoryActivity;
 import com.example.myapplication.userdata.ChildAccount;
