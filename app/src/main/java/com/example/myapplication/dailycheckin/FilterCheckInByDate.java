@@ -17,7 +17,6 @@ import com.example.myapplication.R;
 import com.example.myapplication.childmanaging.SignInChildProfileActivity;
 import com.example.myapplication.providers.AccessInfoActivity;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -123,10 +122,13 @@ public class FilterCheckInByDate extends AppCompatActivity {
         }
         Calendar start = selectedDates.getFirst();
         Calendar end = selectedDates.getLast();
-        BigInteger threeMonths = new BigInteger("7889238000");
-        BigInteger sixMonths = new BigInteger("15778476000");
-        BigInteger startToEnd = new BigInteger(String.valueOf(end.getTimeInMillis()-start.getTimeInMillis()));
-        if (startToEnd.compareTo(threeMonths) < 0 || startToEnd.compareTo(sixMonths) > 0) {
+        
+        // Calculate 90 days (3 months) and 180 days (6 months) in milliseconds
+        long ninetyDaysInMillis = 90L * 24L * 60L * 60L * 1000L;
+        long oneEightyDaysInMillis = 180L * 24L * 60L * 60L * 1000L;
+        long startToEnd = end.getTimeInMillis() - start.getTimeInMillis();
+        
+        if (startToEnd < ninetyDaysInMillis || startToEnd > oneEightyDaysInMillis) {
             Toast.makeText(this, "Time not within 3-6 months", Toast.LENGTH_SHORT).show();
             return;
         }
