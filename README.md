@@ -1,4 +1,4 @@
-# SMART AIR
+![logo](app/src/main/res/drawable/applogo.png)
 
 A kid-friendly Android application designed to help children (ages 6-16) understand asthma, practice proper inhaler technique, log symptoms and medicine use, and share parent-approved information with healthcare providers via concise, exportable reports.
 
