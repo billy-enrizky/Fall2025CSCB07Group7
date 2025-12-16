@@ -1,6 +1,6 @@
 ![logo](app/src/main/res/drawable/applogo.png)
 
-https://github.com/user-attachments/assets/a43e611e-4c87-4fcc-8ffe-ab68131021b6
+https://github.com/user-attachments/assets/45f2d167-c90f-4c8b-801f-6d81f0b773ce
 
 # SMART AIR
 
