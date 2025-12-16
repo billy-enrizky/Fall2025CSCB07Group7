@@ -951,7 +951,9 @@ Calculates controller medication adherence percentage based on schedule and logs
 
 ## License
 
-MIT License
+MIT License.
+**Disclaimer**: This project was initially completed as part of CSCB07H3[https://utsc.calendar.utoronto.ca/course/cscb07h3] Project at the University of Toronto Scarborough. We encourage the community not to reuse it for assignments, submissions, or any inappropriate purposes.
+
 
 ##  Acknowledgments and Contact
 
