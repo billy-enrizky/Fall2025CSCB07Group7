@@ -173,7 +173,6 @@ graph LR
 - Firebase BOM: 34.5.0
 - Firebase Auth
 - Firebase Database
-- Firebase Cloud Messaging
 - MPAndroidChart: v3.1.0
 - Material Calendar View: 1.9.2
 ```
