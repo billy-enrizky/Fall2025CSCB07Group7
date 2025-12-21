@@ -171,9 +171,10 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
         android:layout_marginBottom="36dp"
+        android:backgroundTint="#000000"
         android:onClick="ApplyChange"
         android:text="Apply Change"
         app:layout_constraintBottom_toTopOf="@+id/textView30"
-        app:layout_constraintStart_toStartOf="parent"  android:textColor="#000000"/>
+        app:layout_constraintStart_toStartOf="parent"  android:textColor="#FFFFFF"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
