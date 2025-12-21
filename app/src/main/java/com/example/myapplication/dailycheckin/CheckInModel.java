@@ -32,11 +32,16 @@ public class CheckInModel {
     //I didn't use the "users" node, but the a new node "CheckInManager"
     //Because we need to read "users" when sign in,
     //I don't wanna make sign in too slow.
+    //Uses timestamp as key to allow multiple entries per day
     public void WriteIntoDB(DailyCheckin checkin, CallBack callback){
-        String Date = getDate();
+        // Ensure timestamp is set (use current time if not already set)
+        if (checkin.getTimestamp() == 0) {
+            checkin.setTimestamp(System.currentTimeMillis());
+        }
+        String timestampKey = String.valueOf(checkin.getTimestamp());
         String encodedUsername = FirebaseKeyEncoder.encode(checkin.username);
         UserManager.mDatabase.child("CheckInManager")
-                .child(encodedUsername).child(Date).setValue(checkin)
+                .child(encodedUsername).child(timestampKey).setValue(checkin)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
@@ -65,17 +70,60 @@ public class CheckInModel {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 HashMap<String, DailyCheckin> map = new HashMap<>();
-                for (DataSnapshot s : snapshot.getChildren()) {
-                    String date = s.getKey();
-                    DailyCheckin record = s.getValue(DailyCheckin.class);
-                    map.put(date, record);
+                boolean foundData = false;
+                if (snapshot.exists()) {
+                    foundData = true;
+                    for (DataSnapshot s : snapshot.getChildren()) {
+                        String key = s.getKey();
+                        DailyCheckin record = s.getValue(DailyCheckin.class);
+                        if (record != null) {
+                            // Use timestamp as key (or key itself if timestamp not set for backward compatibility)
+                            String mapKey = (record.getTimestamp() != 0) ? String.valueOf(record.getTimestamp()) : key;
+                            map.put(mapKey, record);
+                        }
+                    }
                 }
-                if (callback != null){
-                    callback.onComplete(map);
+                
+                // If no data found at encoded path and encoded != raw, check raw path for backward compatibility
+                if (!foundData && !encodedUsername.equals(username)) {
+                    UserManager.mDatabase.child("CheckInManager").child(username)
+                            .addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot rawSnapshot) {
+                                    if (rawSnapshot.exists()) {
+                                        for (DataSnapshot s : rawSnapshot.getChildren()) {
+                                            String key = s.getKey();
+                                            DailyCheckin record = s.getValue(DailyCheckin.class);
+                                            if (record != null) {
+                                                // Use timestamp as key (or key itself if timestamp not set for backward compatibility)
+                                                String mapKey = (record.getTimestamp() != 0) ? String.valueOf(record.getTimestamp()) : key;
+                                                map.put(mapKey, record);
+                                            }
+                                        }
+                                    }
+                                    if (callback != null){
+                                        callback.onComplete(map);
+                                    }
+                                }
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+                                    if (callback != null){
+                                        callback.onComplete(map);
+                                    }
+                                }
+                            });
+                } else {
+                    if (callback != null){
+                        callback.onComplete(map);
+                    }
                 }
             }
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
+            public void onCancelled(@NonNull DatabaseError error) {
+                if (callback != null){
+                    callback.onComplete(new HashMap<>());
+                }
+            }
         });
     }
 
@@ -98,25 +146,91 @@ public class CheckInModel {
 
     public static void readFromDB(String username,String begin, String end, ResultCallBack<HashMap<String,DailyCheckin>> callback){
         String encodedUsername = FirebaseKeyEncoder.encode(username);
+        // For date range queries, we need to load all entries and filter by date in code
+        // since we now use timestamp keys instead of date keys
         UserManager.mDatabase.child("CheckInManager").child(encodedUsername)
-                .orderByKey()
-                .startAt(begin)     // eg. "2025-01-01"
-                .endAt(end)         // eg. "2025-03-01"
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         HashMap<String, DailyCheckin> map = new HashMap<>();
-                        for (DataSnapshot s : snapshot.getChildren()) {
-                            String date = s.getKey();
-                            DailyCheckin record = s.getValue(DailyCheckin.class);
-                            map.put(date, record);
+                        boolean foundData = false;
+                        if (snapshot.exists()) {
+                            foundData = true;
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                            for (DataSnapshot s : snapshot.getChildren()) {
+                                String key = s.getKey();
+                                DailyCheckin record = s.getValue(DailyCheckin.class);
+                                if (record != null) {
+                                    // Determine date from timestamp or key (for backward compatibility)
+                                    String entryDate;
+                                    if (record.getTimestamp() != 0) {
+                                        entryDate = dateFormat.format(new Date(record.getTimestamp()));
+                                    } else {
+                                        // Backward compatibility: key might be a date string
+                                        entryDate = key;
+                                    }
+                                    
+                                    // Filter by date range
+                                    if (entryDate.compareTo(begin) >= 0 && entryDate.compareTo(end) <= 0) {
+                                        String mapKey = (record.getTimestamp() != 0) ? String.valueOf(record.getTimestamp()) : key;
+                                        map.put(mapKey, record);
+                                    }
+                                }
+                            }
                         }
-                        if (callback != null){
-                            callback.onComplete(map);
+                        
+                        // If no data found at encoded path and encoded != raw, check raw path for backward compatibility
+                        if (!foundData && !encodedUsername.equals(username)) {
+                            UserManager.mDatabase.child("CheckInManager").child(username)
+                                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot rawSnapshot) {
+                                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                                            if (rawSnapshot.exists()) {
+                                                for (DataSnapshot s : rawSnapshot.getChildren()) {
+                                                    String key = s.getKey();
+                                                    DailyCheckin record = s.getValue(DailyCheckin.class);
+                                                    if (record != null) {
+                                                        // Determine date from timestamp or key (for backward compatibility)
+                                                        String entryDate;
+                                                        if (record.getTimestamp() != 0) {
+                                                            entryDate = dateFormat.format(new Date(record.getTimestamp()));
+                                                        } else {
+                                                            // Backward compatibility: key might be a date string
+                                                            entryDate = key;
+                                                        }
+                                                        
+                                                        // Filter by date range
+                                                        if (entryDate.compareTo(begin) >= 0 && entryDate.compareTo(end) <= 0) {
+                                                            String mapKey = (record.getTimestamp() != 0) ? String.valueOf(record.getTimestamp()) : key;
+                                                            map.put(mapKey, record);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (callback != null){
+                                                callback.onComplete(map);
+                                            }
+                                        }
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError error) {
+                                            if (callback != null){
+                                                callback.onComplete(map);
+                                            }
+                                        }
+                                    });
+                        } else {
+                            if (callback != null){
+                                callback.onComplete(map);
+                            }
                         }
                     }
                     @Override
-                    public void onCancelled(@NonNull DatabaseError error) {}
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        if (callback != null){
+                            callback.onComplete(new HashMap<>());
+                        }
+                    }
                 });
     }
 }

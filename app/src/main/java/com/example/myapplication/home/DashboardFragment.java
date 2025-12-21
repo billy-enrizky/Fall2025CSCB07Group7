@@ -117,8 +117,10 @@ public class DashboardFragment extends Fragment {
     public void onResume() {
         super.onResume();
         attachChildrenZoneListeners();
-        loadExistingNotificationIds();
+        // Attach listener first, then load existing IDs
+        // This ensures onChildAdded fires for existing notifications before they're marked as seen
         attachNotificationsListener();
+        loadExistingNotificationIds();
     }
 
     @Override
@@ -146,17 +148,37 @@ public class DashboardFragment extends Fragment {
                     .child("notifications");
         }
         
-        notificationsRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult() != null) {
-                seenNotificationIds.clear();
-                DataSnapshot snapshot = task.getResult();
+        // Load existing notification IDs to track which ones we've already processed
+        // This prevents duplicate alerts if onChildAdded fires multiple times
+        notificationsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
                 if (snapshot.exists()) {
+                    int count = 0;
                     for (DataSnapshot child : snapshot.getChildren()) {
                         if (child.getKey() != null) {
-                            seenNotificationIds.add(child.getKey());
+                            // Only add to seenNotificationIds if the notification is read or dismissed
+                            // This allows unread notifications to show alerts even after logout/login
+                            com.example.myapplication.notifications.NotificationItem notification = 
+                                child.getValue(com.example.myapplication.notifications.NotificationItem.class);
+                            String alertKey = "notification_" + child.getKey();
+                            boolean isDismissed = dismissedAlertsPrefs.getBoolean(alertKey, false);
+                            
+                            if (notification != null && (notification.isRead() || isDismissed)) {
+                                seenNotificationIds.add(child.getKey());
+                            }
+                            count++;
                         }
                     }
+                    Log.d(TAG, "Loaded " + count + " existing notifications, " + seenNotificationIds.size() + " marked as seen");
+                } else {
+                    Log.d(TAG, "No existing notifications found at Firebase path: " + notificationsRef.toString());
                 }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e(TAG, "Error loading existing notification IDs from Firebase path: " + notificationsRef.toString(), error.toException());
             }
         });
     }
@@ -241,16 +263,12 @@ public class DashboardFragment extends Fragment {
         
         String notificationId = snapshot.getKey();
         
-        if (seenNotificationIds.contains(notificationId)) {
-            return;
-        }
-        
-        seenNotificationIds.add(notificationId);
-        
         com.example.myapplication.notifications.NotificationItem notification = 
             snapshot.getValue(com.example.myapplication.notifications.NotificationItem.class);
         
         if (notification == null || notification.isRead()) {
+            // Mark as seen even if read, so we don't process it again
+            seenNotificationIds.add(notificationId);
             return;
         }
         
@@ -258,12 +276,25 @@ public class DashboardFragment extends Fragment {
         boolean isDismissed = dismissedAlertsPrefs.getBoolean(alertKey, false);
         
         if (isDismissed) {
+            // Mark as seen if dismissed, so we don't process it again
+            seenNotificationIds.add(notificationId);
             return;
         }
+        
+        // Only skip if we've already shown this alert in the current session
+        // This prevents showing the same alert multiple times if onChildAdded fires multiple times
+        if (seenNotificationIds.contains(notificationId)) {
+            return;
+        }
+        
+        // Mark as seen to prevent duplicate alerts in the same session
+        seenNotificationIds.add(notificationId);
         
         String childName = notification.getChildName() != null ? notification.getChildName() : "Your child";
         String title = getNotificationTitle(notification.getType());
         String message = notification.getMessage() != null ? notification.getMessage() : "New alert for " + childName;
+        
+        Log.d(TAG, "Showing alert for notification: " + notificationId + " - " + message);
         
         if (getActivity() != null && !getActivity().isFinishing() && !getActivity().isDestroyed()) {
             getActivity().runOnUiThread(() -> {
@@ -399,7 +430,49 @@ public class DashboardFragment extends Fragment {
                 if (latestChild == null) {
                     latestChild = child;
                 }
-                updateChildZoneFromSnapshot(latestChild, snapshot);
+                boolean foundData = snapshot.exists() && snapshot.hasChildren();
+                
+                // If no data found at encoded path and encoded != raw, check raw path for backward compatibility
+                if (!foundData && !encodedChildId.equals(childId)) {
+                    Log.d(TAG, "Checking raw childId path for zone listener (backward compatibility): " + childId);
+                    DatabaseReference rawPefRef = UserManager.mDatabase
+                            .child("users")
+                            .child(parentId)
+                            .child("children")
+                            .child(childId)
+                            .child("pefReadings");
+                    
+                    Query rawLatestPEFQuery = rawPefRef.orderByChild("timestamp").limitToLast(1);
+                    rawLatestPEFQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot rawSnapshot) {
+                            ChildAccount latestChild = latestChildAccounts.get(childId);
+                            if (latestChild == null) {
+                                latestChild = child;
+                            }
+                            if (rawSnapshot.exists() && rawSnapshot.hasChildren()) {
+                                updateChildZoneFromSnapshot(latestChild, rawSnapshot);
+                            } else {
+                                // No data found in either path
+                                ChildZoneInfo info = new ChildZoneInfo(latestChild, Zone.UNKNOWN, 0.0, null, null);
+                                updateChildZoneInfo(info);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e(TAG, "Error loading child zone from raw path for " + childId, error.toException());
+                            ChildAccount latestChild = latestChildAccounts.get(childId);
+                            if (latestChild == null) {
+                                latestChild = child;
+                            }
+                            ChildZoneInfo info = new ChildZoneInfo(latestChild, Zone.UNKNOWN, 0.0, null, null);
+                            updateChildZoneInfo(info);
+                        }
+                    });
+                } else {
+                    updateChildZoneFromSnapshot(latestChild, snapshot);
+                }
             }
             
             @Override
@@ -429,7 +502,53 @@ public class DashboardFragment extends Fragment {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 ChildAccount updatedChild = snapshot.getValue(ChildAccount.class);
-                if (updatedChild != null) {
+                boolean foundData = updatedChild != null;
+                
+                // If no data found at encoded path and encoded != raw, check raw path for backward compatibility
+                if (!foundData && !encodedChildId.equals(childId)) {
+                    Log.d(TAG, "Checking raw childId path for child account (backward compatibility): " + childId);
+                    DatabaseReference rawChildAccountRef = UserManager.mDatabase
+                            .child("users")
+                            .child(parentId)
+                            .child("children")
+                            .child(childId);
+                    
+                    rawChildAccountRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot rawSnapshot) {
+                            ChildAccount updatedChild = rawSnapshot.getValue(ChildAccount.class);
+                            if (updatedChild != null) {
+                                latestChildAccounts.put(childId, updatedChild);
+                                
+                                // Check raw path for PEF readings too
+                                DatabaseReference rawPefRef = UserManager.mDatabase
+                                        .child("users")
+                                        .child(parentId)
+                                        .child("children")
+                                        .child(childId)
+                                        .child("pefReadings");
+                                
+                                Query rawPefQuery = rawPefRef.orderByChild("timestamp").limitToLast(1);
+                                rawPefQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot pefSnapshot) {
+                                        updateChildZoneFromSnapshot(updatedChild, pefSnapshot);
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError error) {
+                                        Log.e(TAG, "Error refreshing zone after personalBest change from raw path", error.toException());
+                                    }
+                                });
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e(TAG, "Error loading child account from raw path for " + childId, error.toException());
+                        }
+                    });
+                } else if (updatedChild != null) {
                     latestChildAccounts.put(childId, updatedChild);
                     
                     Query pefQuery = childPEFQueries.get(childId);

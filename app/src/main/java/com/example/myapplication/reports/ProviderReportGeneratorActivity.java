@@ -10,7 +10,9 @@ import android.graphics.pdf.PdfDocument;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -18,10 +20,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myapplication.R;
 import com.example.myapplication.UserManager;
@@ -68,17 +73,17 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
     private Button buttonEndDate;
     private Button buttonGeneratePDF;
     private TextView textViewChildName;
-    private TextView textViewRescueFrequency;
-    private TextView textViewAdherence;
-    private TextView textViewSymptomBurden;
     private FrameLayout frameLayoutZoneChart;
     private FrameLayout frameLayoutTrendChart;
     private FrameLayout frameLayoutRescueChart;
     private FrameLayout frameLayoutSymptomsChart;
     private FrameLayout frameLayoutMedicineChart;
 
-    private LinearLayout linearLayoutSharedItems;
+    private RecyclerView recyclerViewSharedItems;
+    private RecyclerView recyclerViewReportSummary;
     private TextView textViewNoSharing;
+    private SharingStatusAdapter sharingStatusAdapter;
+    private ReportSummaryAdapter reportSummaryAdapter;
 
     private String parentId;
     private String childId;
@@ -135,17 +140,23 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
         buttonEndDate = findViewById(R.id.buttonEndDate);
         buttonGeneratePDF = findViewById(R.id.buttonGeneratePDF);
         textViewChildName = findViewById(R.id.textViewChildName);
-        textViewRescueFrequency = findViewById(R.id.textViewRescueFrequency);
-        textViewAdherence = findViewById(R.id.textViewAdherence);
-        textViewSymptomBurden = findViewById(R.id.textViewSymptomBurden);
         frameLayoutZoneChart = findViewById(R.id.frameLayoutZoneChart);
         frameLayoutTrendChart = findViewById(R.id.frameLayoutTrendChart);
         frameLayoutRescueChart = findViewById(R.id.frameLayoutRescueChart);
         frameLayoutSymptomsChart = findViewById(R.id.frameLayoutSymptomsChart);
         frameLayoutMedicineChart = findViewById(R.id.frameLayoutMedicineChart);
 
-        linearLayoutSharedItems = findViewById(R.id.linearLayoutSharedItems);
+        recyclerViewSharedItems = findViewById(R.id.recyclerViewSharedItems);
+        recyclerViewReportSummary = findViewById(R.id.recyclerViewReportSummary);
         textViewNoSharing = findViewById(R.id.textViewNoSharing);
+
+        sharingStatusAdapter = new SharingStatusAdapter(new ArrayList<>());
+        recyclerViewSharedItems.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewSharedItems.setAdapter(sharingStatusAdapter);
+
+        reportSummaryAdapter = new ReportSummaryAdapter(new ArrayList<>());
+        recyclerViewReportSummary.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewReportSummary.setAdapter(reportSummaryAdapter);
 
         if (childName != null) {
             textViewChildName.setText("Child: " + childName);
@@ -187,12 +198,12 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
 
     private void updateSharedTag() {
         if (childPermissions == null) {
-            linearLayoutSharedItems.setVisibility(View.GONE);
+            recyclerViewSharedItems.setVisibility(View.GONE);
             textViewNoSharing.setVisibility(View.VISIBLE);
+            sharingStatusAdapter.updateItems(new ArrayList<>());
             return;
         }
 
-        linearLayoutSharedItems.removeAllViews();
         List<String> sharedItems = new ArrayList<>();
 
         if (Boolean.TRUE.equals(childPermissions.getRescueLogs())) {
@@ -218,20 +229,13 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
         }
 
         if (sharedItems.isEmpty()) {
-            linearLayoutSharedItems.setVisibility(View.GONE);
+            recyclerViewSharedItems.setVisibility(View.GONE);
             textViewNoSharing.setVisibility(View.VISIBLE);
+            sharingStatusAdapter.updateItems(new ArrayList<>());
         } else {
             textViewNoSharing.setVisibility(View.GONE);
-            linearLayoutSharedItems.setVisibility(View.VISIBLE);
-
-            for (String item : sharedItems) {
-                TextView itemView = new TextView(this);
-                itemView.setText("• " + item);
-                itemView.setTextSize(14f);
-                itemView.setTextColor(android.graphics.Color.parseColor("#4CAF50"));
-                itemView.setPadding(0, 4, 0, 4);
-                linearLayoutSharedItems.addView(itemView);
-            }
+            recyclerViewSharedItems.setVisibility(View.VISIBLE);
+            sharingStatusAdapter.updateItems(sharedItems);
         }
     }
 
@@ -434,16 +438,19 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
                 .child(encodedChildId)
                 .child("pefReadings");
 
-        Query query = pefRef.orderByChild("timestamp").startAt(startDate).endAt(endDate);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+        DatabaseReference childRef = UserManager.mDatabase
+                .child("users")
+                .child(parentId)
+                .child("children")
+                .child(encodedChildId);
+
+        // Use direct listener instead of orderByChild query to avoid index requirements
+        // Filter by date range in code after loading
+        // Check encoded path first (current standard), then raw path for backward compatibility
+        pefRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                DatabaseReference childRef = UserManager.mDatabase
-                        .child("users")
-                        .child(parentId)
-                        .child("children")
-                        .child(encodedChildId);
-
+                boolean foundData = snapshot.exists();
                 childRef.child("personalBest").get().addOnCompleteListener(pbTask -> {
                     Integer personalBest = null;
                     if (pbTask.isSuccessful() && pbTask.getResult().getValue() != null) {
@@ -455,32 +462,79 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
                         }
                     }
 
+                    // Create final copy for use in inner class
+                    final Integer finalPersonalBest = personalBest;
+
                     Map<String, Integer> zoneCounts = new HashMap<>();
                     zoneCounts.put("green", 0);
                     zoneCounts.put("yellow", 0);
                     zoneCounts.put("red", 0);
                     zoneCounts.put("unknown", 0);
 
-                    if (snapshot.exists() && personalBest != null && personalBest > 0) {
+                    if (snapshot.exists() && finalPersonalBest != null && finalPersonalBest > 0) {
                         for (DataSnapshot child : snapshot.getChildren()) {
                             PEFReading reading = child.getValue(PEFReading.class);
-                            if (reading != null) {
-                                Zone zone = ZoneCalculator.calculateZone(reading.getValue(), personalBest);
+                            if (reading != null && reading.getTimestamp() >= startDate && reading.getTimestamp() <= endDate) {
+                                Zone zone = ZoneCalculator.calculateZone(reading.getValue(), finalPersonalBest);
                                 String zoneName = com.example.myapplication.charts.ChartComponent.normalizeZoneName(zone.getDisplayName());
                                 zoneCounts.put(zoneName, zoneCounts.getOrDefault(zoneName, 0) + 1);
                             }
                         }
+                        Log.d(TAG, "Loaded PEF readings for zone distribution from Firebase path: " + pefRef.toString());
+                    } else {
+                        if (!snapshot.exists()) {
+                            Log.d(TAG, "No PEF readings found at Firebase path: " + pefRef.toString());
+                        }
                     }
+                    
+                    // If no data found at encoded path and encoded != raw, check raw path for backward compatibility
+                    if (!foundData && !encodedChildId.equals(childId)) {
+                        Log.d(TAG, "Checking raw childId path for zone distribution (backward compatibility): " + childId);
+                        DatabaseReference rawPefRef = UserManager.mDatabase
+                                .child("users")
+                                .child(parentId)
+                                .child("children")
+                                .child(childId)
+                                .child("pefReadings");
+                        
+                        rawPefRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot rawSnapshot) {
+                                if (rawSnapshot.exists() && finalPersonalBest != null && finalPersonalBest > 0) {
+                                    for (DataSnapshot child : rawSnapshot.getChildren()) {
+                                        PEFReading reading = child.getValue(PEFReading.class);
+                                        if (reading != null && reading.getTimestamp() >= startDate && reading.getTimestamp() <= endDate) {
+                                            Zone zone = ZoneCalculator.calculateZone(reading.getValue(), finalPersonalBest);
+                                            String zoneName = com.example.myapplication.charts.ChartComponent.normalizeZoneName(zone.getDisplayName());
+                                            zoneCounts.put(zoneName, zoneCounts.getOrDefault(zoneName, 0) + 1);
+                                        }
+                                    }
+                                    Log.d(TAG, "Loaded PEF readings for zone distribution from raw path (backward compatibility): " + rawPefRef.toString());
+                                }
+                                reportData.setZoneDistribution(zoneCounts);
+                                updateUI();
+                                updateZoneChart();
+                            }
 
-                    reportData.setZoneDistribution(zoneCounts);
-                    updateUI();
-                    updateZoneChart();
+                            @Override
+                            public void onCancelled(DatabaseError error) {
+                                Log.e(TAG, "Error loading zone distribution from raw Firebase path: " + rawPefRef.toString(), error.toException());
+                                reportData.setZoneDistribution(zoneCounts);
+                                updateUI();
+                                updateZoneChart();
+                            }
+                        });
+                    } else {
+                        reportData.setZoneDistribution(zoneCounts);
+                        updateUI();
+                        updateZoneChart();
+                    }
                 });
             }
 
             @Override
             public void onCancelled(DatabaseError error) {
-                Log.e(TAG, "Error loading zone distribution", error.toException());
+                Log.e(TAG, "Error loading zone distribution from Firebase path: " + pefRef.toString(), error.toException());
             }
         });
     }
@@ -494,15 +548,19 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
                 .child(encodedChildId)
                 .child("pefReadings");
 
-        Query query = pefRef.orderByChild("timestamp").startAt(startDate).endAt(endDate);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+        // Use direct listener instead of orderByChild query to avoid index requirements
+        // Filter by date range in code after loading
+        // Check encoded path first (current standard), then raw path for backward compatibility
+        pefRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 List<ProviderReportData.PEFDataPoint> dataPoints = new ArrayList<>();
+                boolean foundData = false;
                 if (snapshot.exists()) {
+                    foundData = true;
                     for (DataSnapshot child : snapshot.getChildren()) {
                         PEFReading reading = child.getValue(PEFReading.class);
-                        if (reading != null) {
+                        if (reading != null && reading.getTimestamp() >= startDate && reading.getTimestamp() <= endDate) {
                             dataPoints.add(new ProviderReportData.PEFDataPoint(
                                     reading.getTimestamp(),
                                     reading.getValue(),
@@ -510,24 +568,77 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
                             ));
                         }
                     }
+                    Log.d(TAG, "Loaded PEF readings for trend chart from Firebase path: " + pefRef.toString());
+                } else {
+                    Log.d(TAG, "No PEF readings found at Firebase path: " + pefRef.toString());
                 }
-                dataPoints.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
-                reportData.setPefTrendData(dataPoints);
-                updateTrendChart();
+                
+                // If no data found at encoded path and encoded != raw, check raw path for backward compatibility
+                if (!foundData && !encodedChildId.equals(childId)) {
+                    Log.d(TAG, "Checking raw childId path for PEF trend (backward compatibility): " + childId);
+                    DatabaseReference rawPefRef = UserManager.mDatabase
+                            .child("users")
+                            .child(parentId)
+                            .child("children")
+                            .child(childId)
+                            .child("pefReadings");
+                    
+                    rawPefRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot rawSnapshot) {
+                            if (rawSnapshot.exists()) {
+                                for (DataSnapshot child : rawSnapshot.getChildren()) {
+                                    PEFReading reading = child.getValue(PEFReading.class);
+                                    if (reading != null && reading.getTimestamp() >= startDate && reading.getTimestamp() <= endDate) {
+                                        dataPoints.add(new ProviderReportData.PEFDataPoint(
+                                                reading.getTimestamp(),
+                                                reading.getValue(),
+                                                0.0
+                                        ));
+                                    }
+                                }
+                                Log.d(TAG, "Loaded PEF readings for trend chart from raw path (backward compatibility): " + rawPefRef.toString());
+                            }
+                            dataPoints.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
+                            reportData.setPefTrendData(dataPoints);
+                            updateTrendChart();
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e(TAG, "Error loading PEF trend from raw Firebase path: " + rawPefRef.toString(), error.toException());
+                            dataPoints.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
+                            reportData.setPefTrendData(dataPoints);
+                            updateTrendChart();
+                        }
+                    });
+                } else {
+                    dataPoints.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
+                    reportData.setPefTrendData(dataPoints);
+                    updateTrendChart();
+                }
             }
 
             @Override
             public void onCancelled(DatabaseError error) {
-                Log.e(TAG, "Error loading PEF trend", error.toException());
+                Log.e(TAG, "Error loading PEF trend from Firebase path: " + pefRef.toString(), error.toException());
             }
         });
     }
 
     private void updateUI() {
         if (reportData.getRescueFrequency() >= 0 && reportData.getControllerAdherence() >= 0 && reportData.getSymptomBurdenDays() >= 0) {
-            textViewRescueFrequency.setText("Rescue Frequency: " + reportData.getRescueFrequency() + " uses");
-            textViewAdherence.setText("Controller Adherence: " + String.format(Locale.getDefault(), "%.1f%%", reportData.getControllerAdherence()));
-            textViewSymptomBurden.setText("Symptom Burden: " + reportData.getSymptomBurdenDays() + " problem days");
+            List<String> summaryItems = new ArrayList<>();
+            summaryItems.add("Rescue Frequency: " + reportData.getRescueFrequency() + " uses");
+            summaryItems.add("Controller Adherence: " + String.format(Locale.getDefault(), "%.1f%%", reportData.getControllerAdherence()));
+            summaryItems.add("Symptom Burden: " + reportData.getSymptomBurdenDays() + " problem days");
+            reportSummaryAdapter.updateItems(summaryItems);
+        } else {
+            List<String> summaryItems = new ArrayList<>();
+            summaryItems.add("Rescue Frequency: Loading...");
+            summaryItems.add("Controller Adherence: Loading...");
+            summaryItems.add("Symptom Burden: Loading...");
+            reportSummaryAdapter.updateItems(summaryItems);
         }
     }
 
@@ -643,6 +754,13 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
     }
 
     private void loadSymptomsPerDay() {
+        Map<String, Integer> dailyCounts = new HashMap<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat logDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String startDateStr = logDateFormat.format(new Date(startDate));
+        String endDateStr = logDateFormat.format(new Date(endDate));
+
+        // Load from triage sessions (incidents)
         String encodedChildId = FirebaseKeyEncoder.encode(childId);
         DatabaseReference incidentRef = UserManager.mDatabase
                 .child("users")
@@ -651,29 +769,147 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
                 .child(encodedChildId)
                 .child("incidents");
 
-        Query query = incidentRef.orderByChild("timestamp").startAt(startDate).endAt(endDate);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+        // Use direct listener instead of orderByChild query to avoid index requirements
+        // Filter by date range in code after loading
+        // Check encoded path first (current standard), then raw path for backward compatibility
+        incidentRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                Map<String, Integer> dailyCounts = new HashMap<>();
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-
+                boolean foundData = false;
                 if (snapshot.exists()) {
+                    foundData = true;
                     for (DataSnapshot child : snapshot.getChildren()) {
                         TriageIncident incident = child.getValue(TriageIncident.class);
-                        if (incident != null) {
+                        if (incident != null && incident.getTimestamp() >= startDate && incident.getTimestamp() <= endDate) {
                             String dateKey = dateFormat.format(new Date(incident.getTimestamp()));
                             dailyCounts.put(dateKey, dailyCounts.getOrDefault(dateKey, 0) + 1);
                         }
                     }
+                    Log.d(TAG, "Loaded incidents from Firebase path: " + incidentRef.toString());
+                } else {
+                    Log.d(TAG, "No incidents found at Firebase path: " + incidentRef.toString());
                 }
+                
+                // If no data found at encoded path and encoded != raw, check raw path for backward compatibility
+                if (!foundData && !encodedChildId.equals(childId)) {
+                    Log.d(TAG, "Checking raw childId path for symptoms per day (backward compatibility): " + childId);
+                    DatabaseReference rawIncidentRef = UserManager.mDatabase
+                            .child("users")
+                            .child(parentId)
+                            .child("children")
+                            .child(childId)
+                            .child("incidents");
+                    
+                    rawIncidentRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot rawSnapshot) {
+                            if (rawSnapshot.exists()) {
+                                for (DataSnapshot child : rawSnapshot.getChildren()) {
+                                    TriageIncident incident = child.getValue(TriageIncident.class);
+                                    if (incident != null && incident.getTimestamp() >= startDate && incident.getTimestamp() <= endDate) {
+                                        String dateKey = dateFormat.format(new Date(incident.getTimestamp()));
+                                        dailyCounts.put(dateKey, dailyCounts.getOrDefault(dateKey, 0) + 1);
+                                    }
+                                }
+                                Log.d(TAG, "Loaded incidents from raw path (backward compatibility): " + rawIncidentRef.toString());
+                            }
+                            
+                            // Also load from daily check-ins (CheckInManager)
+                            com.example.myapplication.dailycheckin.CheckInModel.readFromDB(childId, startDateStr, endDateStr, new com.example.myapplication.ResultCallBack<HashMap<String, com.example.myapplication.dailycheckin.DailyCheckin>>() {
+                                @Override
+                                public void onComplete(HashMap<String, com.example.myapplication.dailycheckin.DailyCheckin> checkIns) {
+                                    if (checkIns != null) {
+                                        for (Map.Entry<String, com.example.myapplication.dailycheckin.DailyCheckin> entry : checkIns.entrySet()) {
+                                            String dateKey = entry.getKey(); // CheckInManager uses date as key (yyyy-MM-dd)
+                                            com.example.myapplication.dailycheckin.DailyCheckin checkIn = entry.getValue();
+                                            if (checkIn != null && (checkIn.getCoughWheezeLevel() > 0 || checkIn.getNightWaking() || 
+                                                    (checkIn.getActivityLimits() != null && !checkIn.getActivityLimits().isEmpty()))) {
+                                                if (dateKey != null && !dateKey.isEmpty()) {
+                                                    dailyCounts.put(dateKey, dailyCounts.getOrDefault(dateKey, 0) + 1);
+                                                }
+                                            }
+                                        }
+                                    }
 
-                updateSymptomsChart(dailyCounts);
+                                    updateSymptomsChart(dailyCounts);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e(TAG, "Error loading symptoms per day from raw Firebase path: " + rawIncidentRef.toString(), error.toException());
+                            // Still try to load from daily check-ins even if triage data fails
+                            com.example.myapplication.dailycheckin.CheckInModel.readFromDB(childId, startDateStr, endDateStr, new com.example.myapplication.ResultCallBack<HashMap<String, com.example.myapplication.dailycheckin.DailyCheckin>>() {
+                                @Override
+                                public void onComplete(HashMap<String, com.example.myapplication.dailycheckin.DailyCheckin> checkIns) {
+                                    Map<String, Integer> fallbackCounts = new HashMap<>();
+                                    if (checkIns != null) {
+                                        for (Map.Entry<String, com.example.myapplication.dailycheckin.DailyCheckin> entry : checkIns.entrySet()) {
+                                            String dateKey = entry.getKey();
+                                            com.example.myapplication.dailycheckin.DailyCheckin checkIn = entry.getValue();
+                                            if (checkIn != null && (checkIn.getCoughWheezeLevel() > 0 || checkIn.getNightWaking() || 
+                                                    (checkIn.getActivityLimits() != null && !checkIn.getActivityLimits().isEmpty()))) {
+                                                if (dateKey != null && !dateKey.isEmpty()) {
+                                                    fallbackCounts.put(dateKey, fallbackCounts.getOrDefault(dateKey, 0) + 1);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    updateSymptomsChart(fallbackCounts);
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    // Also load from daily check-ins (CheckInManager)
+                    com.example.myapplication.dailycheckin.CheckInModel.readFromDB(childId, startDateStr, endDateStr, new com.example.myapplication.ResultCallBack<HashMap<String, com.example.myapplication.dailycheckin.DailyCheckin>>() {
+                        @Override
+                        public void onComplete(HashMap<String, com.example.myapplication.dailycheckin.DailyCheckin> checkIns) {
+                            if (checkIns != null) {
+                                for (Map.Entry<String, com.example.myapplication.dailycheckin.DailyCheckin> entry : checkIns.entrySet()) {
+                                    String dateKey = entry.getKey(); // CheckInManager uses date as key (yyyy-MM-dd)
+                                    com.example.myapplication.dailycheckin.DailyCheckin checkIn = entry.getValue();
+                                    // Count check-ins with symptoms (coughWheezeLevel > 0 or nightWaking or activityLimits)
+                                    if (checkIn != null && (checkIn.getCoughWheezeLevel() > 0 || checkIn.getNightWaking() || 
+                                            (checkIn.getActivityLimits() != null && !checkIn.getActivityLimits().isEmpty()))) {
+                                        if (dateKey != null && !dateKey.isEmpty()) {
+                                            dailyCounts.put(dateKey, dailyCounts.getOrDefault(dateKey, 0) + 1);
+                                        }
+                                    }
+                                }
+                            }
+
+                            updateSymptomsChart(dailyCounts);
+                        }
+                    });
+                }
             }
 
             @Override
             public void onCancelled(DatabaseError error) {
-                Log.e(TAG, "Error loading symptoms per day", error.toException());
+                Log.e(TAG, "Error loading symptoms per day from triage sessions at Firebase path: " + incidentRef.toString(), error.toException());
+                // Still try to load from daily check-ins even if triage data fails
+                com.example.myapplication.dailycheckin.CheckInModel.readFromDB(childId, startDateStr, endDateStr, new com.example.myapplication.ResultCallBack<HashMap<String, com.example.myapplication.dailycheckin.DailyCheckin>>() {
+                    @Override
+                    public void onComplete(HashMap<String, com.example.myapplication.dailycheckin.DailyCheckin> checkIns) {
+                        Map<String, Integer> dailyCounts = new HashMap<>();
+                        if (checkIns != null) {
+                            for (Map.Entry<String, com.example.myapplication.dailycheckin.DailyCheckin> entry : checkIns.entrySet()) {
+                                String dateKey = entry.getKey(); // CheckInManager uses date as key (yyyy-MM-dd)
+                                com.example.myapplication.dailycheckin.DailyCheckin checkIn = entry.getValue();
+                                if (checkIn != null && (checkIn.getCoughWheezeLevel() > 0 || checkIn.getNightWaking() || 
+                                        (checkIn.getActivityLimits() != null && !checkIn.getActivityLimits().isEmpty()))) {
+                                    if (dateKey != null && !dateKey.isEmpty()) {
+                                        dailyCounts.put(dateKey, dailyCounts.getOrDefault(dateKey, 0) + 1);
+                                    }
+                                }
+                            }
+                        }
+
+                        updateSymptomsChart(dailyCounts);
+                    }
+                });
             }
         });
     }
@@ -1284,6 +1520,90 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
             sum += point.getPefValue();
         }
         return sum / reportData.getPefTrendData().size();
+    }
+
+    private class SharingStatusAdapter extends RecyclerView.Adapter<SharingStatusAdapter.ViewHolder> {
+        private List<String> sharedItems;
+
+        public SharingStatusAdapter(List<String> sharedItems) {
+            this.sharedItems = sharedItems;
+        }
+
+        public void updateItems(List<String> newItems) {
+            this.sharedItems = newItems;
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_provider_sharing_status, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            if (position >= 0 && position < sharedItems.size()) {
+                holder.textViewSharedItem.setText("• " + sharedItems.get(position));
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return sharedItems != null ? sharedItems.size() : 0;
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView textViewSharedItem;
+
+            ViewHolder(View itemView) {
+                super(itemView);
+                textViewSharedItem = itemView.findViewById(R.id.textViewSharedItem);
+            }
+        }
+    }
+
+    private class ReportSummaryAdapter extends RecyclerView.Adapter<ReportSummaryAdapter.ViewHolder> {
+        private List<String> summaryItems;
+
+        public ReportSummaryAdapter(List<String> summaryItems) {
+            this.summaryItems = summaryItems;
+        }
+
+        public void updateItems(List<String> newItems) {
+            this.summaryItems = newItems;
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_report_summary, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            if (position >= 0 && position < summaryItems.size()) {
+                holder.textViewSummaryItem.setText(summaryItems.get(position));
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return summaryItems != null ? summaryItems.size() : 0;
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView textViewSummaryItem;
+
+            ViewHolder(View itemView) {
+                super(itemView);
+                textViewSummaryItem = itemView.findViewById(R.id.textViewSummaryItem);
+            }
+        }
     }
 }
 
