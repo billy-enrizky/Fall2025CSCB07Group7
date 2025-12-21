@@ -144,11 +144,11 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
-        android:backgroundTint="#6E8CA0"
+        android:backgroundTint="#000000"
         android:onClick="ApplyChange"
         android:text="Apply Change"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView26"  android:textColor="#000000"/>
+        app:layout_constraintTop_toBottomOf="@+id/textView26"  android:textColor="#FFFFFF"/>
 
     <TextView
         android:id="@+id/textView30"
