@@ -16,7 +16,7 @@
         android:layout_marginTop="16dp"
         android:backgroundTint="#000000"
         android:text="Back"
-        android:textColor="#000000"
+        android:textColor="#FFFFFF"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -117,7 +117,7 @@
                 android:layout_marginTop="24dp"
                 android:backgroundTint="#000000"
                 android:text="Save Action Plan"
-                android:textColor="#000000" />
+                android:textColor="#FFFFFF" />
 
         </LinearLayout>
     </ScrollView>

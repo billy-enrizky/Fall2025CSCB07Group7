@@ -25,9 +25,9 @@
         android:backgroundTint="#000000"
         android:onClick="GoBackToHome"
         android:text="Back to Home"
+        android:textColor="#FFFFFF"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:background="#99D9EA" android:textColor="#000000"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textView13"
