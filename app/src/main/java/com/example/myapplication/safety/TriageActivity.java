@@ -597,7 +597,13 @@ public class TriageActivity extends AppCompatActivity {
                 .child("incidents")
                 .child(String.valueOf(incident.getTimestamp()));
         
-        incidentRef.setValue(incident);
+        incidentRef.setValue(incident).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.d("TriageActivity", "Triage incident saved successfully to Firebase: " + incidentRef.toString());
+            } else {
+                Log.e("TriageActivity", "Failed to save triage incident", task.getException());
+            }
+        });
         
         if (session.isRescueAttempts() && session.getRescueCount() > 0) {
             saveRescueUsage(session.getRescueCount());
@@ -617,7 +623,13 @@ public class TriageActivity extends AppCompatActivity {
             RescueUsage usage = new RescueUsage();
             usage.setTimestamp(System.currentTimeMillis());
             usage.setCount(1);
-            rescueRef.setValue(usage);
+            rescueRef.setValue(usage).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    Log.d("TriageActivity", "Rescue usage saved successfully to Firebase: " + rescueRef.toString());
+                } else {
+                    Log.e("TriageActivity", "Failed to save rescue usage", task.getException());
+                }
+            });
         }
         
         checkRapidRescueAlert();

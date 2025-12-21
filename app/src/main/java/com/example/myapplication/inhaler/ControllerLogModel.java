@@ -28,12 +28,19 @@ public class ControllerLogModel {
     }
     public static void writeIntoDB(ControllerLog controllerlog, CallBack callback){
         if(controllerlog.username == null){
+            android.util.Log.e("ControllerLogModel", "Cannot save controller log: username is null");
             return;
         }
         String username = controllerlog.username;
-        UserManager.mDatabase.child("ControllerLogManager").child(username).child(controllerlog.getDate()).setValue(controllerlog).addOnCompleteListener(new OnCompleteListener<Void>() {
+        com.google.firebase.database.DatabaseReference logRef = UserManager.mDatabase.child("ControllerLogManager").child(username).child(controllerlog.getDate());
+        logRef.setValue(controllerlog).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(Task<Void> task) {
+                if (task.isSuccessful()) {
+                    android.util.Log.d("ControllerLogModel", "Controller log saved successfully to Firebase: " + logRef.toString());
+                } else {
+                    android.util.Log.e("ControllerLogModel", "Failed to save controller log", task.getException());
+                }
                 if(callback != null) {
                     callback.onComplete();
                 }

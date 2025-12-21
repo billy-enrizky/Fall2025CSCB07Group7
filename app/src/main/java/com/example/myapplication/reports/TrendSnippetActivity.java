@@ -15,6 +15,9 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.myapplication.R;
 import com.example.myapplication.UserManager;
+import com.example.myapplication.ControllerLog;
+import com.example.myapplication.ControllerLogModel;
+import com.example.myapplication.ResultCallBack;
 import com.example.myapplication.charts.ChartComponent;
 import com.example.myapplication.safety.PEFReading;
 import com.example.myapplication.safety.RescueUsage;
@@ -47,6 +50,7 @@ public class TrendSnippetActivity extends AppCompatActivity {
     private FrameLayout frameLayoutTrendChart;
     private FrameLayout frameLayoutRescueChart;
     private FrameLayout frameLayoutSymptomsChart;
+    private FrameLayout frameLayoutMedicineChart;
     private TextView textViewChildName;
 
     private String parentId;
@@ -85,6 +89,7 @@ public class TrendSnippetActivity extends AppCompatActivity {
         frameLayoutTrendChart = findViewById(R.id.frameLayoutTrendChart);
         frameLayoutRescueChart = findViewById(R.id.frameLayoutRescueChart);
         frameLayoutSymptomsChart = findViewById(R.id.frameLayoutSymptomsChart);
+        frameLayoutMedicineChart = findViewById(R.id.frameLayoutMedicineChart);
         textViewChildName = findViewById(R.id.textViewChildName);
 
         if (childName != null) {
@@ -131,6 +136,7 @@ public class TrendSnippetActivity extends AppCompatActivity {
         }else{
             findViewById(R.id.SC).setVisibility(View.GONE);
         }
+        loadMedicinePerDay();
     }
 
     private void loadZoneDistribution() {
@@ -325,6 +331,39 @@ public class TrendSnippetActivity extends AppCompatActivity {
             @Override
             public void onCancelled(DatabaseError error) {
                 Log.e(TAG, "Error loading symptoms per day", error.toException());
+            }
+        });
+    }
+
+    private void loadMedicinePerDay() {
+        Calendar cal = Calendar.getInstance();
+        long endDate = cal.getTimeInMillis();
+        cal.add(Calendar.DAY_OF_MONTH, -30);
+        long startDate = cal.getTimeInMillis();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String startDateStr = dateFormat.format(new Date(startDate));
+        String endDateStr = dateFormat.format(new Date(endDate));
+
+        ControllerLogModel.readFromDB(childId, startDateStr, endDateStr, new ResultCallBack<HashMap<String, ControllerLog>>() {
+            @Override
+            public void onComplete(HashMap<String, ControllerLog> logs) {
+                Map<String, Integer> dailyCounts = new HashMap<>();
+
+                if (logs != null) {
+                    for (String dateKey : logs.keySet()) {
+                        String dayKey = dateKey.split("_")[0];
+                        dailyCounts.put(dayKey, dailyCounts.getOrDefault(dayKey, 0) + 1);
+                    }
+                }
+
+                runOnUiThread(() -> {
+                    frameLayoutMedicineChart.removeAllViews();
+                    View chartView = ChartComponent.createChartView(TrendSnippetActivity.this, frameLayoutMedicineChart, ChartComponent.ChartType.BAR);
+                    frameLayoutMedicineChart.addView(chartView);
+                    BarChart barChart = chartView.findViewById(R.id.barChart);
+                    ChartComponent.setupDailyBarChart(barChart, dailyCounts, "Controller Medicine Use Per Day", android.graphics.Color.parseColor("#2196F3"));
+                });
             }
         });
     }
