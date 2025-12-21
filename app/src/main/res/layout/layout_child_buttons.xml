@@ -31,7 +31,7 @@
                 android:layout_height="100dp"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Sign in"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -42,7 +42,7 @@
                 android:layout_height="100dp"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Check-in"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -52,7 +52,7 @@
                 android:layout_width="0dp"
                 android:layout_height="100dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Set PB"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -71,7 +71,7 @@
                 android:layout_height="100dp"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Notes"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -82,7 +82,7 @@
                 android:layout_height="100dp"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Badges"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -92,7 +92,7 @@
                 android:layout_width="0dp"
                 android:layout_height="100dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Inhaler"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -111,7 +111,7 @@
                 android:layout_height="100dp"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Controller Schedule"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -122,7 +122,7 @@
                 android:layout_height="100dp"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Action Plan"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -132,7 +132,7 @@
                 android:layout_width="0dp"
                 android:layout_height="100dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Generate Report"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -151,7 +151,7 @@
                 android:layout_height="100dp"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Incident History"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -162,7 +162,7 @@
                 android:layout_height="100dp"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="PEF History"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -172,7 +172,7 @@
                 android:layout_width="0dp"
                 android:layout_height="100dp"
                 android:layout_weight="1"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Checkin History"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
@@ -188,7 +188,7 @@
                 android:id="@+id/buttonDeleteChild"
                 android:layout_width="match_parent"
                 android:layout_height="100dp"
-                android:backgroundTint="#6E8CA0"
+                android:backgroundTint="#000000"
                 android:text="Delete Child"
                 android:textColor="#FFFFFF"
                 app:cornerRadius="5dp" />
