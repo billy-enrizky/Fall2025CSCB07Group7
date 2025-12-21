@@ -807,8 +807,7 @@ classDiagram
    ```
 
 2. **Configure Firebase**
-   - Add `google-services.json` to `app/` directory
-   - Update Firebase project ID in `firebase.json` and `.firebaserc`
+   - Configure Firebase project settings as needed
 
 3. **Install dependencies**
    ```bash
@@ -863,7 +862,6 @@ CSCB07Project/
 │   │   │   └── AndroidManifest.xml
 │   │   └── test/                          # Unit tests
 │   ├── build.gradle.kts
-│   └── google-services.json
 ├── build.gradle.kts
 ├── firebase.json
 ├── database.rules.json
