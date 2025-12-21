@@ -679,19 +679,21 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
     }
 
     private void loadMedicinePerDay() {
+        Map<String, Integer> dailyCounts = new HashMap<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String startDateStr = dateFormat.format(new Date(startDate));
-        String endDateStr = dateFormat.format(new Date(endDate));
+        SimpleDateFormat logDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String startDateStr = logDateFormat.format(new Date(startDate));
+        String endDateStr = logDateFormat.format(new Date(endDate));
 
-        ControllerLogModel.readFromDB(childId, startDateStr, endDateStr, new com.example.myapplication.ResultCallBack<HashMap<String, ControllerLog>>() {
+        // Load from direct controller inhaler usage (ControllerLogManager)
+        ControllerLogModel.readFromDB(childId, startDateStr + "_00:00:00", endDateStr + "_23:59:59", new com.example.myapplication.ResultCallBack<HashMap<String, ControllerLog>>() {
             @Override
             public void onComplete(HashMap<String, ControllerLog> logs) {
-                Map<String, Integer> dailyCounts = new HashMap<>();
-
                 if (logs != null) {
-                    for (String dateKey : logs.keySet()) {
-                        String dayKey = dateKey.split("_")[0];
-                        dailyCounts.put(dayKey, dailyCounts.getOrDefault(dayKey, 0) + 1);
+                    for (ControllerLog log : logs.values()) {
+                        String dateKey = dateFormat.format(new Date(log.getTimestamp()));
+                        int currentCount = dailyCounts.getOrDefault(dateKey, 0);
+                        dailyCounts.put(dateKey, currentCount + 1); // Each ControllerLog entry is 1 dose
                     }
                 }
 
