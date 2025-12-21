@@ -10,16 +10,19 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
         android:paddingBottom="32dp">
 
         <TextView
             android:id="@+id/create_child_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="75dp"
+            android:layout_marginStart="104dp"
             android:layout_marginTop="48dp"
             android:text="Add New Child"
-            android:textSize="40sp"
+            android:textSize="30sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -27,10 +30,12 @@
             android:id="@+id/input_child_username"
             android:layout_width="339dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="96dp"
+            android:layout_marginTop="100dp"
+            android:background="@drawable/input_field_background"
             android:ems="10"
             android:hint="Username (unique)"
             android:inputType="text"
+            android:textColorHint="#B0B0B0"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.472"
             app:layout_constraintStart_toStartOf="parent"
@@ -40,30 +45,36 @@
             android:id="@+id/input_child_name"
             android:layout_width="337dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="144dp"
+            android:layout_marginTop="160dp"
+            android:background="@drawable/input_field_background"
             android:hint="Name"
+            android:textColorHint="#B0B0B0"
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.486"
+            app:layout_constraintHorizontal_bias="0.459"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <DatePicker
+        <EditText
             android:id="@+id/input_child_dob"
-            android:layout_width="wrap_content"
+            android:layout_width="337dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            android:calendarViewShown="false"
+            android:layout_marginTop="307dp"
+            android:background="@drawable/input_field_background"
+            android:clickable="true"
+            android:focusable="false"
+            android:hint="Date of Birth"
+            android:textColorHint="#B0B0B0"
+            android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/dob_title" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/dob_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="243dp"
+            android:layout_marginTop="276dp"
             android:text="Date of Birth"
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -77,11 +88,13 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="87dp"
             android:layout_marginTop="16dp"
+            android:background="@drawable/input_field_background"
+            android:clickable="false"
             android:ems="10"
-            android:hint="Age"
             android:enabled="false"
             android:focusable="false"
-            android:clickable="false"
+            android:hint="Age"
+            android:textColorHint="#B0B0B0"
             android:textSize="20sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/input_child_dob" />
@@ -92,7 +105,9 @@
             android:layout_height="70dp"
             android:layout_marginStart="5dp"
             android:layout_marginTop="16dp"
+            android:background="@drawable/input_field_background"
             android:hint="notes (optional)"
+            android:textColorHint="#B0B0B0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/input_child_age" />
 
@@ -114,12 +129,13 @@
             android:id="@+id/editTextTextPassword2"
             android:layout_width="337dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="196dp"
+            android:layout_marginTop="220dp"
+            android:background="@drawable/input_field_background"
             android:ems="10"
             android:hint="Password"
             android:inputType="textPassword"
+            android:textColorHint="#B0B0B0"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.486"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
