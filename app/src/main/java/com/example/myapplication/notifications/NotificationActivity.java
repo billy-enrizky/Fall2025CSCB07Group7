@@ -41,6 +41,10 @@ public class NotificationActivity extends AppCompatActivity {
     private NotificationAdapter adapter;
     private List<NotificationItem> notifications;
     private String parentId;
+    
+    // Realtime listener references
+    private DatabaseReference notificationRef;
+    private ValueEventListener notificationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,18 +76,42 @@ public class NotificationActivity extends AppCompatActivity {
         adapter = new NotificationAdapter(notifications);
         recyclerViewNotifications.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewNotifications.setAdapter(adapter);
-
-        loadNotifications();
     }
-
-    private void loadNotifications() {
-        DatabaseReference notificationRef = UserManager.mDatabase
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        attachNotificationListener();
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        detachNotificationListener();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        detachNotificationListener();
+    }
+    
+    private void attachNotificationListener() {
+        if (parentId == null) {
+            return;
+        }
+        
+        // Detach existing listener first to prevent duplicates
+        detachNotificationListener();
+        
+        notificationRef = UserManager.mDatabase
                 .child("users")
                 .child(parentId)
                 .child("notifications");
 
         // Use direct listener instead of orderByChild query to avoid index requirements
-        notificationRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        // Use addValueEventListener for realtime updates similar to personalBest
+        notificationListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 notifications.clear();
@@ -96,6 +124,7 @@ public class NotificationActivity extends AppCompatActivity {
                         }
                     }
                     Log.d(TAG, "Loaded " + notifications.size() + " notifications from Firebase path: " + notificationRef.toString());
+                    Log.d(TAG, "Notification history loaded with realtime updates");
                 } else {
                     Log.d(TAG, "No notifications found at Firebase path: " + notificationRef.toString());
                 }
@@ -116,7 +145,17 @@ public class NotificationActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError error) {
                 Log.e(TAG, "Error loading notifications from Firebase path: " + notificationRef.toString(), error.toException());
             }
-        });
+        };
+        
+        notificationRef.addValueEventListener(notificationListener);
+    }
+    
+    private void detachNotificationListener() {
+        if (notificationRef != null && notificationListener != null) {
+            notificationRef.removeEventListener(notificationListener);
+            notificationListener = null;
+        }
+        notificationRef = null;
     }
 
     private class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
