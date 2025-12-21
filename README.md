@@ -154,27 +154,93 @@ graph LR
 
 ## Technical Stack
 
-### Frontend
+### Development Environment
 - **Language**: Java 11
-- **Platform**: Android (minSdk 24, targetSdk 36)
-- **UI Framework**: Android Material Design Components
-- **Architecture**: MVP (Model-View-Presenter) pattern
-- **Charts**: MPAndroidChart v3.1.0
-- **Calendar**: Material Calendar View 1.9.2
+- **Build System**: Gradle (AGP 8.12.3)
+- **Build Scripts**: Kotlin DSL (build.gradle.kts)
+- **IDE**: Android Studio
+- **Version Control**: Git
 
-### Backend
-- **Authentication**: Firebase Authentication
+### Platform & SDK
+- **Platform**: Android
+- **Minimum SDK**: 24 (Android 7.0 Nougat)
+- **Target SDK**: 36 (Android 15)
+- **Compile SDK**: 36
+- **Package Name**: com.example.myapplication
+
+### Architecture & Design Patterns
+- **Architecture Pattern**: MVP (Model-View-Presenter)
+- **UI Binding**: ViewBinding (enabled)
+- **Build Config**: BuildConfig fields for Firebase configuration
+
+### UI Framework & Components
+- **Material Design**: Android Material Components 1.13.0
+- **AppCompat**: AndroidX AppCompat 1.7.1
+- **Layout**: ConstraintLayout 2.2.1
+- **Navigation**: ViewPager2 1.1.0 (for onboarding)
+- **Lists**: RecyclerView 1.4.0
+- **Fragments**: AndroidX Fragment 1.8.9
+- **Activities**: AndroidX Activity 1.11.0
+
+### Backend Services
+- **Authentication**: Firebase Authentication (via Firebase BOM 34.5.0)
 - **Database**: Firebase Realtime Database
-- **File Storage**: Android File System (PDF generation)
+- **Crash Reporting**: Firebase Crashlytics 20.0.3
+- **Initialization**: Custom FirebaseOptions configuration (no google-services.json)
 
-### Key Libraries
+### Third-Party Libraries
+- **Charts**: MPAndroidChart v3.1.0
+  - Line charts for PEF trends
+  - Bar charts for zone distribution and rescue frequency
+  - Pie charts (legacy, replaced with bar charts)
+- **Calendar**: Material Calendar View 1.9.2
+  - Date selection for reports and filters
+  - Date picker dialogs
+
+### PDF Generation
+- **Library**: Android's native PdfDocument API
+- **Rendering**: PdfRenderer for PDF viewing
+- **Export Format**: PDF and CSV for provider reports
+- **Storage**: Android File System (External Files Directory)
+
+### Testing
+- **Unit Testing**: JUnit 4.13.2
+- **Android Testing**: AndroidX Test Ext JUnit 1.3.0
+- **UI Testing**: Espresso 3.7.0
+- **Mocking**: Mockito 5.1.1 / 5.11.0
+
+### Key Dependencies
 ```gradle
-- Firebase BOM: 34.5.0
-- Firebase Auth
-- Firebase Database
-- MPAndroidChart: v3.1.0
-- Material Calendar View: 1.9.2
+// Firebase
+implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+implementation("com.google.firebase:firebase-auth")
+implementation("com.google.firebase:firebase-database")
+implementation("com.google.firebase:firebase-crashlytics")
+
+// UI Components
+implementation("com.google.android.material:material:1.13.0")
+implementation("androidx.appcompat:appcompat:1.7.1")
+implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+implementation("androidx.viewpager2:viewpager2:1.1.0")
+implementation("androidx.recyclerview:recyclerview:1.4.0")
+implementation("androidx.fragment:fragment:1.8.9")
+implementation("androidx.activity:activity:1.11.0")
+
+// Third-Party
+implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+implementation("com.applandeo:material-calendar-view:1.9.2")
+
+// Testing
+testImplementation("junit:junit:4.13.2")
+testImplementation("org.mockito:mockito-core:5.1.1")
+androidTestImplementation("androidx.test.ext:junit:1.3.0")
+androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
 ```
+
+### Build Configuration
+- **Signing**: Release keystore support (RSA 2048-bit)
+- **ProGuard**: Disabled (minifyEnabled = false)
+- **APK Output**: Custom filename "SMART AIR.apk" for release builds
 
 ## Key Features
 
