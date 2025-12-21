@@ -68,6 +68,19 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
     }
+    
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val currentFileName = output.outputFileName
+            val newFileName = when (variant.buildType.name) {
+                "release" -> "SMART AIR.apk"
+                else -> currentFileName
+            }
+            output.outputFileName = newFileName
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
