@@ -132,11 +132,18 @@ public class PEFEntryActivity extends AppCompatActivity {
 
         // PEF entries persist forever in Firebase, just like rescue medicine logs
         // Each entry is stored with timestamp as key and will never be automatically deleted
+        String firebasePath = "users/" + parentId + "/children/" + encodedChildId + "/pefReadings/" + timestamp;
+        Log.d(TAG, "savePEFReading: Saving PEF reading to Firebase");
+        Log.d(TAG, "savePEFReading: childId=" + childId + ", encodedChildId=" + encodedChildId + ", parentId=" + parentId);
+        Log.d(TAG, "savePEFReading: Firebase path=" + firebasePath);
+        Log.d(TAG, "savePEFReading: PEF value=" + pefValue + ", timestamp=" + timestamp + " (" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(timestamp)) + ")");
+        
         pefRef.setValue(reading)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "PEF reading saved successfully to Firebase: " + pefRef.toString());
-                        Log.d(TAG, "PEF entry will persist forever - stored at: users/" + parentId + "/children/" + encodedChildId + "/pefReadings/" + timestamp);
+                        Log.d(TAG, "savePEFReading: PEF reading saved successfully to Firebase: " + pefRef.toString());
+                        Log.d(TAG, "savePEFReading: PEF entry will persist forever - stored at: " + firebasePath);
+                        Log.d(TAG, "savePEFReading: Reading data - value=" + reading.getValue() + ", timestamp=" + reading.getTimestamp() + ", preMed=" + reading.isPreMed() + ", postMed=" + reading.isPostMed() + ", notes=" + reading.getNotes());
                         Toast.makeText(this, "PEF reading saved successfully", Toast.LENGTH_SHORT).show();
                         
                         checkAndLogZoneChange(pefValue);
@@ -144,7 +151,8 @@ public class PEFEntryActivity extends AppCompatActivity {
                         setResult(RESULT_OK);
                         finish();
                     } else {
-                        Log.e(TAG, "Failed to save PEF reading", task.getException());
+                        Log.e(TAG, "savePEFReading: Failed to save PEF reading to Firebase path: " + firebasePath, task.getException());
+                        Log.e(TAG, "savePEFReading: Error details - " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
                         Toast.makeText(this, "Failed to save PEF reading", Toast.LENGTH_SHORT).show();
                     }
                 });

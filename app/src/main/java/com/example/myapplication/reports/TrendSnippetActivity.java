@@ -204,6 +204,7 @@ public class TrendSnippetActivity extends AppCompatActivity {
 
     private void loadPEFTrend() {
         if (personalBest == null || personalBest <= 0) {
+            Log.w(TAG, "loadPEFTrend: Skipping because personalBest is null or <= 0. personalBest=" + personalBest);
             return;
         }
 
@@ -213,6 +214,12 @@ public class TrendSnippetActivity extends AppCompatActivity {
         long startDate = cal.getTimeInMillis();
 
         String encodedChildId = FirebaseKeyEncoder.encode(childId);
+        String firebasePath = "users/" + parentId + "/children/" + encodedChildId + "/pefReadings";
+        Log.d(TAG, "loadPEFTrend: Loading PEF data for chart");
+        Log.d(TAG, "loadPEFTrend: childId=" + childId + ", encodedChildId=" + encodedChildId + ", parentId=" + parentId);
+        Log.d(TAG, "loadPEFTrend: Firebase path=" + firebasePath);
+        Log.d(TAG, "loadPEFTrend: Date range: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(startDate)) + " to " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(endDate)));
+        
         DatabaseReference pefRef = UserManager.mDatabase
                 .child("users")
                 .child(parentId)
@@ -226,16 +233,30 @@ public class TrendSnippetActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 List<ChartComponent.PEFDataPoint> dataPoints = new ArrayList<>();
+                int totalReadings = 0;
+                int readingsInRange = 0;
+                
                 if (snapshot.exists()) {
+                    totalReadings = (int) snapshot.getChildrenCount();
+                    Log.d(TAG, "loadPEFTrend: Found " + totalReadings + " total PEF readings in Firebase");
+                    
                     for (DataSnapshot child : snapshot.getChildren()) {
                         PEFReading reading = child.getValue(PEFReading.class);
-                        if (reading != null && reading.getTimestamp() >= startDate && reading.getTimestamp() <= endDate) {
-                            dataPoints.add(new ChartComponent.PEFDataPoint(reading.getTimestamp(), reading.getValue()));
+                        if (reading != null) {
+                            long timestamp = reading.getTimestamp();
+                            if (timestamp >= startDate && timestamp <= endDate) {
+                                dataPoints.add(new ChartComponent.PEFDataPoint(timestamp, reading.getValue()));
+                                readingsInRange++;
+                            }
+                            Log.d(TAG, "loadPEFTrend: Reading - timestamp=" + timestamp + " (" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(timestamp)) + "), value=" + reading.getValue() + ", inRange=" + (timestamp >= startDate && timestamp <= endDate));
+                        } else {
+                            Log.w(TAG, "loadPEFTrend: Failed to parse PEF reading from snapshot: " + child.getKey());
                         }
                     }
-                    Log.d(TAG, "Loaded PEF readings for trend chart from Firebase path: " + pefRef.toString());
+                    Log.d(TAG, "loadPEFTrend: Loaded " + readingsInRange + " PEF readings in date range out of " + totalReadings + " total from Firebase path: " + pefRef.toString());
                 } else {
-                    Log.d(TAG, "No PEF readings found at Firebase path: " + pefRef.toString());
+                    Log.w(TAG, "loadPEFTrend: No PEF readings found at Firebase path: " + pefRef.toString());
+                    Log.w(TAG, "loadPEFTrend: This may indicate a persistence issue - data was saved but not found when loading");
                 }
 
                 dataPoints.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
@@ -246,12 +267,14 @@ public class TrendSnippetActivity extends AppCompatActivity {
                     frameLayoutTrendChart.addView(chartView);
                     LineChart lineChart = chartView.findViewById(R.id.lineChart);
                     ChartComponent.setupLineChart(lineChart, dataPoints, "PEF Trend");
+                    Log.d(TAG, "loadPEFTrend: Chart updated with " + dataPoints.size() + " data points");
                 });
             }
 
             @Override
             public void onCancelled(DatabaseError error) {
-                Log.e(TAG, "Error loading PEF trend from Firebase path: " + pefRef.toString(), error.toException());
+                Log.e(TAG, "loadPEFTrend: Error loading PEF trend from Firebase path: " + pefRef.toString(), error.toException());
+                Log.e(TAG, "loadPEFTrend: Error code: " + error.getCode() + ", message: " + error.getMessage());
             }
         });
     }
