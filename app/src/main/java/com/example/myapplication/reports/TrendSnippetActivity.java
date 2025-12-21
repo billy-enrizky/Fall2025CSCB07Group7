@@ -161,8 +161,9 @@ public class TrendSnippetActivity extends AppCompatActivity {
                 .child(encodedChildId)
                 .child("pefReadings");
 
-        Query query = pefRef.orderByChild("timestamp").startAt(startDate).endAt(endDate);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+        // Use direct listener instead of orderByChild query to avoid index requirements
+        // Filter by date range in code after loading
+        pefRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 Map<String, Integer> zoneCounts = new HashMap<>();
@@ -174,12 +175,15 @@ public class TrendSnippetActivity extends AppCompatActivity {
                 if (snapshot.exists()) {
                     for (DataSnapshot child : snapshot.getChildren()) {
                         PEFReading reading = child.getValue(PEFReading.class);
-                        if (reading != null) {
+                        if (reading != null && reading.getTimestamp() >= startDate && reading.getTimestamp() <= endDate) {
                             Zone zone = ZoneCalculator.calculateZone(reading.getValue(), personalBest);
                             String zoneName = ChartComponent.normalizeZoneName(zone.getDisplayName());
                             zoneCounts.put(zoneName, zoneCounts.getOrDefault(zoneName, 0) + 1);
                         }
                     }
+                    Log.d(TAG, "Loaded PEF readings for zone distribution from Firebase path: " + pefRef.toString());
+                } else {
+                    Log.d(TAG, "No PEF readings found at Firebase path: " + pefRef.toString());
                 }
 
                 runOnUiThread(() -> {
@@ -193,7 +197,7 @@ public class TrendSnippetActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError error) {
-                Log.e(TAG, "Error loading zone distribution", error.toException());
+                Log.e(TAG, "Error loading zone distribution from Firebase path: " + pefRef.toString(), error.toException());
             }
         });
     }
@@ -216,18 +220,22 @@ public class TrendSnippetActivity extends AppCompatActivity {
                 .child(encodedChildId)
                 .child("pefReadings");
 
-        Query query = pefRef.orderByChild("timestamp").startAt(startDate).endAt(endDate);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+        // Use direct listener instead of orderByChild query to avoid index requirements
+        // Filter by date range in code after loading
+        pefRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 List<ChartComponent.PEFDataPoint> dataPoints = new ArrayList<>();
                 if (snapshot.exists()) {
                     for (DataSnapshot child : snapshot.getChildren()) {
                         PEFReading reading = child.getValue(PEFReading.class);
-                        if (reading != null) {
+                        if (reading != null && reading.getTimestamp() >= startDate && reading.getTimestamp() <= endDate) {
                             dataPoints.add(new ChartComponent.PEFDataPoint(reading.getTimestamp(), reading.getValue()));
                         }
                     }
+                    Log.d(TAG, "Loaded PEF readings for trend chart from Firebase path: " + pefRef.toString());
+                } else {
+                    Log.d(TAG, "No PEF readings found at Firebase path: " + pefRef.toString());
                 }
 
                 dataPoints.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
@@ -243,7 +251,7 @@ public class TrendSnippetActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError error) {
-                Log.e(TAG, "Error loading PEF trend", error.toException());
+                Log.e(TAG, "Error loading PEF trend from Firebase path: " + pefRef.toString(), error.toException());
             }
         });
     }
