@@ -229,46 +229,112 @@ public class TrendSnippetActivity extends AppCompatActivity {
 
         // Use direct listener instead of orderByChild query to avoid index requirements
         // Filter by date range in code after loading
+        // Check encoded path first (current standard), then raw path for backward compatibility
+        final List<ChartComponent.PEFDataPoint> dataPoints = new ArrayList<>();
+        final long finalStartDate = startDate;
+        final long finalEndDate = endDate;
+        
         pefRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                List<ChartComponent.PEFDataPoint> dataPoints = new ArrayList<>();
                 int totalReadings = 0;
-                int readingsInRange = 0;
+                boolean foundData = false;
                 
                 if (snapshot.exists()) {
+                    foundData = true;
                     totalReadings = (int) snapshot.getChildrenCount();
-                    Log.d(TAG, "loadPEFTrend: Found " + totalReadings + " total PEF readings in Firebase");
+                    Log.d(TAG, "loadPEFTrend: Found " + totalReadings + " total PEF readings in Firebase at encoded path");
                     
                     for (DataSnapshot child : snapshot.getChildren()) {
                         PEFReading reading = child.getValue(PEFReading.class);
                         if (reading != null) {
                             long timestamp = reading.getTimestamp();
-                            if (timestamp >= startDate && timestamp <= endDate) {
+                            if (timestamp >= finalStartDate && timestamp <= finalEndDate) {
                                 dataPoints.add(new ChartComponent.PEFDataPoint(timestamp, reading.getValue()));
-                                readingsInRange++;
                             }
-                            Log.d(TAG, "loadPEFTrend: Reading - timestamp=" + timestamp + " (" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(timestamp)) + "), value=" + reading.getValue() + ", inRange=" + (timestamp >= startDate && timestamp <= endDate));
+                            Log.d(TAG, "loadPEFTrend: Reading - timestamp=" + timestamp + " (" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(timestamp)) + "), value=" + reading.getValue() + ", inRange=" + (timestamp >= finalStartDate && timestamp <= finalEndDate));
                         } else {
                             Log.w(TAG, "loadPEFTrend: Failed to parse PEF reading from snapshot: " + child.getKey());
                         }
                     }
-                    Log.d(TAG, "loadPEFTrend: Loaded " + readingsInRange + " PEF readings in date range out of " + totalReadings + " total from Firebase path: " + pefRef.toString());
+                    Log.d(TAG, "loadPEFTrend: Loaded " + dataPoints.size() + " PEF readings in date range out of " + totalReadings + " total from Firebase path: " + pefRef.toString());
                 } else {
-                    Log.w(TAG, "loadPEFTrend: No PEF readings found at Firebase path: " + pefRef.toString());
-                    Log.w(TAG, "loadPEFTrend: This may indicate a persistence issue - data was saved but not found when loading");
+                    Log.d(TAG, "loadPEFTrend: No PEF readings found at encoded Firebase path: " + pefRef.toString());
                 }
 
-                dataPoints.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
+                // If no data found at encoded path and encoded != raw, check raw path for backward compatibility
+                // This handles data saved before the encoding fix was applied
+                if (!foundData && !encodedChildId.equals(childId)) {
+                    Log.d(TAG, "loadPEFTrend: Checking raw childId path for backward compatibility: " + childId);
+                    DatabaseReference rawPefRef = UserManager.mDatabase
+                            .child("users")
+                            .child(parentId)
+                            .child("children")
+                            .child(childId)
+                            .child("pefReadings");
+                    
+                    rawPefRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot rawSnapshot) {
+                            if (rawSnapshot.exists()) {
+                                int rawTotalReadings = (int) rawSnapshot.getChildrenCount();
+                                Log.d(TAG, "loadPEFTrend: Found " + rawTotalReadings + " total PEF readings in Firebase at raw path (backward compatibility)");
+                                
+                                for (DataSnapshot child : rawSnapshot.getChildren()) {
+                                    PEFReading reading = child.getValue(PEFReading.class);
+                                    if (reading != null) {
+                                        long timestamp = reading.getTimestamp();
+                                        if (timestamp >= finalStartDate && timestamp <= finalEndDate) {
+                                            dataPoints.add(new ChartComponent.PEFDataPoint(timestamp, reading.getValue()));
+                                        }
+                                        Log.d(TAG, "loadPEFTrend: Reading (raw path) - timestamp=" + timestamp + " (" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(timestamp)) + "), value=" + reading.getValue() + ", inRange=" + (timestamp >= finalStartDate && timestamp <= finalEndDate));
+                                    }
+                                }
+                                Log.d(TAG, "loadPEFTrend: Loaded " + dataPoints.size() + " total PEF readings in date range from raw path: " + rawPefRef.toString());
+                            } else {
+                                Log.d(TAG, "loadPEFTrend: No PEF readings found at raw Firebase path either: " + rawPefRef.toString());
+                            }
+                            
+                            dataPoints.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
 
-                runOnUiThread(() -> {
-                    frameLayoutTrendChart.removeAllViews();
-                    View chartView = ChartComponent.createChartView(TrendSnippetActivity.this, frameLayoutTrendChart, ChartComponent.ChartType.LINE);
-                    frameLayoutTrendChart.addView(chartView);
-                    LineChart lineChart = chartView.findViewById(R.id.lineChart);
-                    ChartComponent.setupLineChart(lineChart, dataPoints, "PEF Trend");
-                    Log.d(TAG, "loadPEFTrend: Chart updated with " + dataPoints.size() + " data points");
-                });
+                            runOnUiThread(() -> {
+                                frameLayoutTrendChart.removeAllViews();
+                                View chartView = ChartComponent.createChartView(TrendSnippetActivity.this, frameLayoutTrendChart, ChartComponent.ChartType.LINE);
+                                frameLayoutTrendChart.addView(chartView);
+                                LineChart lineChart = chartView.findViewById(R.id.lineChart);
+                                ChartComponent.setupLineChart(lineChart, dataPoints, "PEF Trend");
+                                Log.d(TAG, "loadPEFTrend: Chart updated with " + dataPoints.size() + " data points");
+                            });
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e(TAG, "loadPEFTrend: Error loading PEF trend from raw Firebase path: " + rawPefRef.toString(), error.toException());
+                            // Still update chart with data from encoded path (if any)
+                            dataPoints.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
+                            runOnUiThread(() -> {
+                                frameLayoutTrendChart.removeAllViews();
+                                View chartView = ChartComponent.createChartView(TrendSnippetActivity.this, frameLayoutTrendChart, ChartComponent.ChartType.LINE);
+                                frameLayoutTrendChart.addView(chartView);
+                                LineChart lineChart = chartView.findViewById(R.id.lineChart);
+                                ChartComponent.setupLineChart(lineChart, dataPoints, "PEF Trend");
+                                Log.d(TAG, "loadPEFTrend: Chart updated with " + dataPoints.size() + " data points");
+                            });
+                        }
+                    });
+                } else {
+                    // Data found at encoded path or encoded == raw, update chart
+                    dataPoints.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
+
+                    runOnUiThread(() -> {
+                        frameLayoutTrendChart.removeAllViews();
+                        View chartView = ChartComponent.createChartView(TrendSnippetActivity.this, frameLayoutTrendChart, ChartComponent.ChartType.LINE);
+                        frameLayoutTrendChart.addView(chartView);
+                        LineChart lineChart = chartView.findViewById(R.id.lineChart);
+                        ChartComponent.setupLineChart(lineChart, dataPoints, "PEF Trend");
+                        Log.d(TAG, "loadPEFTrend: Chart updated with " + dataPoints.size() + " data points");
+                    });
+                }
             }
 
             @Override
