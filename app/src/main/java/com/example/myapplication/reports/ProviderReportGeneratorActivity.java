@@ -25,6 +25,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.myapplication.R;
 import com.example.myapplication.UserManager;
+import com.example.myapplication.ControllerLog;
+import com.example.myapplication.ControllerLogModel;
 import com.example.myapplication.charts.ChartComponent;
 import com.example.myapplication.dailycheckin.CheckInEntry;
 import com.example.myapplication.medication.ControllerSchedule;
@@ -70,6 +72,7 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
     private FrameLayout frameLayoutTrendChart;
     private FrameLayout frameLayoutRescueChart;
     private FrameLayout frameLayoutSymptomsChart;
+    private FrameLayout frameLayoutMedicineChart;
 
     private LinearLayout linearLayoutSharedItems;
     private TextView textViewNoSharing;
@@ -136,6 +139,7 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
         frameLayoutTrendChart = findViewById(R.id.frameLayoutTrendChart);
         frameLayoutRescueChart = findViewById(R.id.frameLayoutRescueChart);
         frameLayoutSymptomsChart = findViewById(R.id.frameLayoutSymptomsChart);
+        frameLayoutMedicineChart = findViewById(R.id.frameLayoutMedicineChart);
 
         linearLayoutSharedItems = findViewById(R.id.linearLayoutSharedItems);
         textViewNoSharing = findViewById(R.id.textViewNoSharing);
@@ -285,6 +289,7 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
         loadPEFTrend();
         loadRescuePerDay();
         loadSymptomsPerDay();
+        loadMedicinePerDay();
         loadPersonalBest();
         loadTriageIncidents();
         loadTriggers();
@@ -598,6 +603,36 @@ public class ProviderReportGeneratorActivity extends AppCompatActivity {
         frameLayoutSymptomsChart.addView(chartView);
         BarChart barChart = chartView.findViewById(R.id.barChart);
         ChartComponent.setupDailyBarChart(barChart, dailyCounts, "Symptoms Count Per Day", Color.parseColor("#9C27B0"));
+    }
+
+    private void loadMedicinePerDay() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String startDateStr = dateFormat.format(new Date(startDate));
+        String endDateStr = dateFormat.format(new Date(endDate));
+
+        ControllerLogModel.readFromDB(childId, startDateStr, endDateStr, new com.example.myapplication.ResultCallBack<HashMap<String, ControllerLog>>() {
+            @Override
+            public void onComplete(HashMap<String, ControllerLog> logs) {
+                Map<String, Integer> dailyCounts = new HashMap<>();
+
+                if (logs != null) {
+                    for (String dateKey : logs.keySet()) {
+                        String dayKey = dateKey.split("_")[0];
+                        dailyCounts.put(dayKey, dailyCounts.getOrDefault(dayKey, 0) + 1);
+                    }
+                }
+
+                updateMedicineChart(dailyCounts);
+            }
+        });
+    }
+
+    private void updateMedicineChart(Map<String, Integer> dailyCounts) {
+        frameLayoutMedicineChart.removeAllViews();
+        View chartView = ChartComponent.createChartView(this, frameLayoutMedicineChart, ChartComponent.ChartType.BAR);
+        frameLayoutMedicineChart.addView(chartView);
+        BarChart barChart = chartView.findViewById(R.id.barChart);
+        ChartComponent.setupDailyBarChart(barChart, dailyCounts, "Controller Medicine Use Per Day", Color.parseColor("#2196F3"));
     }
 
     private void loadPersonalBest() {

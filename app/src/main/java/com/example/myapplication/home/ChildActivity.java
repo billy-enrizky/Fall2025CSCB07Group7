@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -173,7 +174,7 @@ public class ChildActivity extends AppCompatActivity {
         Button useButton = findViewById(R.id.usebutton);
         Button logsButton = findViewById(R.id.logsButton);
         Button dailycheck = findViewById(R.id.dailycheckinbutton);
-        Button signout = findViewById(R.id.signOutButton);
+        ImageButton signout = findViewById(R.id.signOutButton);
 
         streakButton.setEnabled(false);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {

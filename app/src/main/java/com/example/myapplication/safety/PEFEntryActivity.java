@@ -129,6 +129,7 @@ public class PEFEntryActivity extends AppCompatActivity {
         pefRef.setValue(reading)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
+                        Log.d(TAG, "PEF reading saved successfully to Firebase: " + pefRef.toString());
                         Toast.makeText(this, "PEF reading saved successfully", Toast.LENGTH_SHORT).show();
                         
                         checkAndLogZoneChange(pefValue);
@@ -195,7 +196,14 @@ public class PEFEntryActivity extends AppCompatActivity {
                         pefValue,
                         percentage
                 );
-                historyRef.child(String.valueOf(zoneChange.getTimestamp())).setValue(zoneChange);
+                historyRef.child(String.valueOf(zoneChange.getTimestamp())).setValue(zoneChange)
+                        .addOnCompleteListener(historySaveTask -> {
+                            if (historySaveTask.isSuccessful()) {
+                                Log.d(TAG, "Zone change saved successfully to Firebase");
+                            } else {
+                                Log.e(TAG, "Failed to save zone change", historySaveTask.getException());
+                            }
+                        });
 
                 String childName = childAccount != null ? childAccount.getName() : "Your child";
                 AlertDetector.checkRedZoneDay(parentId, childId, childName, pefValue, personalBest);
