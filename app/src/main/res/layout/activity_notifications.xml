@@ -17,8 +17,9 @@
         android:layout_marginTop="16dp"
         android:backgroundTint="#000000"
         android:text="Back"
+        android:textColor="#FFFFFF"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"  android:textColor="#000000"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textViewTitle"

@@ -16,10 +16,11 @@
         android:backgroundTint="#000000"
         android:onClick="GenerateCode"
         android:text="Generate/Regenerate code"
+        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView21"  android:textColor="#000000"/>
+        app:layout_constraintTop_toBottomOf="@+id/textView21" />
 
     <TextView
         android:id="@+id/textView9"
@@ -29,8 +30,9 @@
         android:layout_marginTop="32dp"
         android:text="Providers LInking Manager"
         android:textSize="30sp"
+        android:textColor="#000000"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button7"  android:textColor="#000000"/>
+        app:layout_constraintTop_toBottomOf="@+id/button7" />
 
     <Button
         android:id="@+id/button6"
@@ -40,10 +42,11 @@
         android:backgroundTint="#000000"
         android:onClick="RevokeCode"
         android:text="Revoke code"
+        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button5"  android:textColor="#000000"/>
+        app:layout_constraintTop_toBottomOf="@+id/button5" />
 
     <Button
         android:id="@+id/button7"
@@ -54,8 +57,9 @@
         android:backgroundTint="#000000"
         android:onClick="GoBackToHome"
         android:text="Back to Home"
+        android:textColor="#FFFFFF"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"  android:textColor="#000000"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textView21"
